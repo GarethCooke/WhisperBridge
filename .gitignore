@@ -4,3 +4,4 @@
 .vscode/launch.json
 .vscode/ipch
 WhisperClient/test-server/node_modules/
+.claude/settings.local.json
