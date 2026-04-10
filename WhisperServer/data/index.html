@@ -1,0 +1,119 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>WhisperBridge</title>
+<link rel="stylesheet" href="/style.css">
+<style>
+  .row { display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.75rem; font-size: 0.9rem; }
+  .row:last-child { margin-bottom: 0; }
+  .label { color: #888; }
+  .value { font-weight: 600; }
+  .ok   { color: #4caf50; }
+  .fail { color: #f44336; }
+  .idle { color: #888; }
+  button {
+    width: 100%; max-width: 360px; padding: 1rem;
+    background: #2979ff; color: #fff; border: none; border-radius: 12px;
+    font-size: 1rem; font-weight: 700; cursor: pointer; letter-spacing: 0.05em;
+    transition: background 0.15s;
+  }
+  button:not(:disabled):hover { background: #1565c0; }
+  #msg { margin-top: 1rem; }
+  .btn-secondary {
+    background: transparent; color: #666; border: 1px solid #333;
+    padding: 0.5rem; font-size: 0.8rem; font-weight: 400;
+    margin-top: 0.5rem; letter-spacing: 0;
+  }
+  .btn-secondary:not(:disabled):hover { background: #1e1e1e; color: #ccc; }
+</style>
+</head>
+<body>
+<h1>WhisperBridge</h1>
+<p class="sub">Vent-Axia Svara controller</p>
+
+<div class="card">
+  <div class="row"><span class="label">Network</span><span class="value" id="ssid">—</span></div>
+  <div class="row"><span class="label">IP</span><span class="value" id="ip">—</span></div>
+  <div class="row"><span class="label">RSSI</span><span class="value" id="rssi">—</span></div>
+  <div class="row"><span class="label">Status</span><span class="value" id="status">—</span></div>
+  <div class="row"><span class="label">Last BLE</span><span class="value" id="ble_ok">—</span></div>
+</div>
+
+<button type="button" id="btn" onclick="triggerBoost()">Boost</button>
+<div id="msg"></div>
+<button type="button" class="btn-secondary" onclick="reprovision()">Change network</button>
+
+<script>
+function setMsg(txt, colour) {
+  const el = document.getElementById('msg');
+  el.textContent = txt;
+  el.style.color = colour || '#888';
+}
+
+function updateStatus(data) {
+  document.getElementById('ssid').textContent = data.ssid || '—';
+  document.getElementById('ip').textContent   = data.ip   || '—';
+  document.getElementById('rssi').textContent = data.rssi != null ? data.rssi + ' dBm' : '—';
+
+  const statusEl = document.getElementById('status');
+  if (data.running) {
+    statusEl.textContent = 'Running';
+    statusEl.className = 'value';
+    document.getElementById('btn').disabled = true;
+  } else {
+    statusEl.textContent = 'Idle';
+    statusEl.className = 'value idle';
+    document.getElementById('btn').disabled = false;
+  }
+
+  const bleEl = document.getElementById('ble_ok');
+  bleEl.textContent = data.running ? '…' : (data.ble_ok ? 'OK' : 'Failed');
+  bleEl.className = 'value ' + (data.running ? '' : (data.ble_ok ? 'ok' : 'fail'));
+}
+
+async function poll() {
+  try {
+    const res = await fetch('/api/status');
+    if (res.ok) updateStatus(await res.json());
+  } catch (_) {}
+}
+
+async function triggerBoost() {
+  document.getElementById('btn').disabled = true;
+  setMsg('Sending boost command…');
+  try {
+    const res = await fetch('/api/boost', { method: 'POST' });
+    if (res.ok) {
+      setMsg('Boost triggered — connecting to fan…', '#4caf50');
+    } else {
+      const j = await res.json().catch(() => ({}));
+      setMsg('Error: ' + (j.error || res.status), '#f44336');
+      document.getElementById('btn').disabled = false;
+    }
+  } catch (e) {
+    setMsg('Request failed: ' + e.message, '#f44336');
+    document.getElementById('btn').disabled = false;
+  }
+}
+
+async function reprovision() {
+  if (!confirm('Clear WiFi credentials and restart into setup mode?')) return;
+  try {
+    const res = await fetch('/api/reprovision', { method: 'POST' });
+    if (res.ok) {
+      setMsg('Restarting into setup mode…');
+    } else {
+      setMsg('Error: ' + res.status, '#f44336');
+    }
+  } catch (e) {
+    setMsg('Request failed: ' + e.message, '#f44336');
+  }
+}
+
+poll();
+setInterval(poll, 2000);
+</script>
+</body>
+</html>

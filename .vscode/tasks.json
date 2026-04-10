@@ -1,0 +1,63 @@
+{
+    "version": "2.0.0",
+    "tasks": [
+        {
+            "label": "Build (USB)",
+            "type": "shell",
+            "command": "& \"$env:USERPROFILE\\.platformio\\penv\\Scripts\\pio.exe\" run -e esp32dev -d WhisperServer",
+            "group": { "kind": "build", "isDefault": true },
+            "presentation": { "panel": "shared", "reveal": "always" },
+            "problemMatcher": []
+        },
+        {
+            "label": "Upload (USB)",
+            "type": "shell",
+            "command": "& \"$env:USERPROFILE\\.platformio\\penv\\Scripts\\pio.exe\" run -e esp32dev -t upload -d WhisperServer",
+            "group": "build",
+            "presentation": { "panel": "shared", "reveal": "always" },
+            "problemMatcher": []
+        },
+        {
+            "label": "Upload (OTA)",
+            "type": "shell",
+            "command": "& \"$env:USERPROFILE\\.platformio\\penv\\Scripts\\pio.exe\" run -e esp32dev_ota -t upload -d WhisperServer",
+            "group": "build",
+            "presentation": { "panel": "shared", "reveal": "always" },
+            "problemMatcher": []
+        },
+        {
+            "label": "Upload Filesystem (LittleFS)",
+            "type": "shell",
+            "command": "& \"$env:USERPROFILE\\.platformio\\penv\\Scripts\\pio.exe\" run -e esp32dev -t uploadfs -d WhisperServer",
+            "group": "build",
+            "presentation": { "panel": "shared", "reveal": "always" },
+            "problemMatcher": []
+        },
+        {
+            "label": "Test (native)",
+            "type": "shell",
+            "command": "& \"$env:USERPROFILE\\.platformio\\penv\\Scripts\\pio.exe\" test -e native -d WhisperServer",
+            "group": { "kind": "test", "isDefault": true },
+            "presentation": { "panel": "shared", "reveal": "always" },
+            "problemMatcher": []
+        },
+        {
+            "label": "Serial Monitor",
+            "type": "shell",
+            "command": "& \"$env:USERPROFILE\\.platformio\\penv\\Scripts\\pio.exe\" device monitor -d WhisperServer",
+            "group": "none",
+            "presentation": { "panel": "dedicated", "reveal": "always" },
+            "problemMatcher": []
+        },
+        {
+            "label": "Start Mock Server",
+            "type": "shell",
+            "command": "npm start",
+            "options": { "cwd": "${workspaceFolder}/WhisperClient/test-server" },
+            "group": "none",
+            "presentation": { "panel": "dedicated", "reveal": "always" },
+            "problemMatcher": [],
+            "isBackground": true
+        }
+    ]
+}

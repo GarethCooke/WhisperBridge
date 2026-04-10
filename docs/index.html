@@ -1,0 +1,1259 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>WhisperBridge — Project Documentation</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500;700&family=Roboto+Mono:wght@400;500&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+  <style>
+/* ── MD3 Design Tokens (dark scheme) ────────────────────────────── */
+:root {
+  --md-primary:           #82b4ff;
+  --md-on-primary:        #003063;
+  --md-primary-container: #00458e;
+  --md-on-primary-cont:   #d6e3ff;
+
+  --md-secondary:         #b8c8e8;
+  --md-on-secondary:      #223249;
+
+  --md-tertiary:          #d6bee4;
+  --md-on-tertiary:       #3b2948;
+
+  --md-error:             #ffb4ab;
+  --md-error-container:   #93000a;
+
+  --md-surface:           #111318;
+  --md-surface-1:         #1d2029;
+  --md-surface-2:         #222532;
+  --md-surface-3:         #272b3b;
+  --md-surface-4:         #2c3145;
+  --md-on-surface:        #e2e2e9;
+  --md-on-surface-var:    #c5c6d0;
+  --md-outline:           #8f909a;
+  --md-outline-var:       #44464f;
+
+  --md-warning:           #ffb74d;
+  --md-warning-container: #3d2000;
+  --md-success:           #79d47f;
+  --md-success-container: #003910;
+
+  --md-shape-xs:   4px;
+  --md-shape-sm:   8px;
+  --md-shape-md:   12px;
+  --md-shape-lg:   16px;
+  --md-shape-xl:   28px;
+  --md-shape-full: 9999px;
+
+  --md-elev1: 0 1px 2px rgba(0,0,0,.3), 0 1px 3px 1px rgba(0,0,0,.15);
+  --md-elev2: 0 1px 2px rgba(0,0,0,.3), 0 2px 6px 2px rgba(0,0,0,.15);
+  --md-elev3: 0 4px 8px 3px rgba(0,0,0,.15), 0 1px 3px rgba(0,0,0,.3);
+}
+
+/* ── Reset & Base ────────────────────────────────────────────────── */
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+html { scroll-behavior: smooth; }
+body {
+  font-family: "Roboto", sans-serif;
+  background: var(--md-surface);
+  color: var(--md-on-surface);
+  line-height: 1.6;
+  font-size: 14px;
+}
+a { color: var(--md-primary); text-decoration: none; }
+a:hover { text-decoration: underline; }
+strong { color: var(--md-on-surface); font-weight: 500; }
+
+/* ── Navigation rail ─────────────────────────────────────────────── */
+.nav {
+  position: fixed; top: 0; left: 0; bottom: 0; width: 80px;
+  background: var(--md-surface-1);
+  border-right: 1px solid var(--md-outline-var);
+  display: flex; flex-direction: column; align-items: center;
+  padding: 1rem 0; gap: 0.25rem; z-index: 100;
+}
+.nav-logo {
+  width: 48px; height: 48px; border-radius: var(--md-shape-md);
+  background: var(--md-primary-container);
+  display: flex; align-items: center; justify-content: center;
+  margin-bottom: 1rem;
+}
+.nav-logo .material-icons { color: var(--md-on-primary-cont); font-size: 28px; }
+.nav-item {
+  width: 56px; padding: 0.4rem 0; border-radius: var(--md-shape-full);
+  display: flex; flex-direction: column; align-items: center;
+  gap: 0.2rem; cursor: pointer; text-decoration: none;
+  transition: background 0.2s;
+  color: var(--md-on-surface-var); font-size: 10px;
+}
+.nav-item:hover { background: rgba(130,180,255,.1); text-decoration: none; }
+.nav-item.active { color: var(--md-primary); }
+.nav-item.active .nav-pill {
+  background: var(--md-primary-container); width: 56px; height: 32px;
+  border-radius: var(--md-shape-full);
+}
+.nav-pill { width: 56px; height: 32px; display: flex; align-items: center; justify-content: center; }
+.nav-item .material-icons { font-size: 22px; }
+
+/* ── Main layout ─────────────────────────────────────────────────── */
+.layout { margin-left: 80px; }
+
+/* ── Hero header ─────────────────────────────────────────────────── */
+.hero {
+  background: linear-gradient(135deg, #001a3d 0%, #0a0e1a 50%, #1a0a2a 100%);
+  padding: 4rem 3rem 3rem;
+  border-bottom: 1px solid var(--md-outline-var);
+  position: relative; overflow: hidden;
+}
+.hero::before {
+  content: '';
+  position: absolute; top: -80px; right: -80px;
+  width: 300px; height: 300px; border-radius: 50%;
+  background: radial-gradient(circle, rgba(130,180,255,0.08) 0%, transparent 70%);
+}
+.hero::after {
+  content: '';
+  position: absolute; bottom: -60px; left: 20%;
+  width: 200px; height: 200px; border-radius: 50%;
+  background: radial-gradient(circle, rgba(214,190,228,0.06) 0%, transparent 70%);
+}
+.hero-inner { max-width: 1100px; position: relative; z-index: 1; }
+.hero-eyebrow {
+  display: flex; align-items: center; gap: 0.5rem;
+  color: var(--md-primary); font-size: 0.75rem; font-weight: 500;
+  letter-spacing: 0.1em; text-transform: uppercase; margin-bottom: 1rem;
+}
+.hero-eyebrow .material-icons { font-size: 16px; }
+.hero h1 {
+  font-size: clamp(2rem, 4vw, 3rem); font-weight: 300; color: #fff;
+  letter-spacing: -0.02em; line-height: 1.15; margin-bottom: 0.75rem;
+}
+.hero h1 span { color: var(--md-primary); font-weight: 400; }
+.hero-sub {
+  font-size: 1rem; color: var(--md-on-surface-var); margin-bottom: 2rem;
+  max-width: 540px;
+}
+.chip-row { display: flex; flex-wrap: wrap; gap: 0.5rem; }
+.chip {
+  display: inline-flex; align-items: center; gap: 0.35rem;
+  background: rgba(130,180,255,0.12); color: var(--md-primary);
+  border: 1px solid rgba(130,180,255,0.25); border-radius: var(--md-shape-full);
+  padding: 0.25rem 0.75rem; font-size: 0.78rem; font-weight: 500;
+}
+.chip.green  { background: rgba(121,212,127,0.1);  color: var(--md-success);  border-color: rgba(121,212,127,0.25); }
+.chip.amber  { background: rgba(255,183,77,0.1);   color: var(--md-warning);  border-color: rgba(255,183,77,0.25); }
+.chip.purple { background: rgba(214,190,228,0.1);  color: var(--md-tertiary); border-color: rgba(214,190,228,0.25); }
+.chip .material-icons { font-size: 14px; }
+
+/* ── Content area ────────────────────────────────────────────────── */
+.content { max-width: 1100px; padding: 2.5rem 3rem; }
+
+/* ── Section headings ────────────────────────────────────────────── */
+.section { margin-bottom: 3rem; scroll-margin-top: 1rem; }
+.section-header { display: flex; align-items: center; gap: 0.75rem; margin-bottom: 1.25rem; }
+.section-icon {
+  width: 40px; height: 40px; border-radius: var(--md-shape-sm);
+  background: var(--md-primary-container);
+  display: flex; align-items: center; justify-content: center; flex-shrink: 0;
+}
+.section-icon .material-icons { color: var(--md-on-primary-cont); font-size: 20px; }
+.section-icon.green  { background: var(--md-success-container); }
+.section-icon.green  .material-icons { color: var(--md-success); }
+.section-icon.amber  { background: var(--md-warning-container); }
+.section-icon.amber  .material-icons { color: var(--md-warning); }
+.section-icon.purple { background: rgba(59,41,72,0.8); }
+.section-icon.purple .material-icons { color: var(--md-tertiary); }
+h2 { font-size: 1.25rem; font-weight: 500; color: var(--md-on-surface); letter-spacing: 0.01em; }
+h3 {
+  font-size: 0.95rem; font-weight: 500; color: var(--md-primary);
+  margin: 1.5rem 0 0.6rem; display: flex; align-items: center; gap: 0.4rem;
+}
+h3::before { content: ''; display: block; width: 3px; height: 1em; background: var(--md-primary); border-radius: 2px; }
+
+p  { color: var(--md-on-surface-var); margin-bottom: 0.9rem; font-size: 0.9rem; }
+ul, ol { margin: 0.5rem 0 0.9rem 1.5rem; color: var(--md-on-surface-var); font-size: 0.9rem; }
+li { margin-bottom: 0.4rem; }
+
+/* ── Cards ───────────────────────────────────────────────────────── */
+.card {
+  background: var(--md-surface-1); border-radius: var(--md-shape-lg);
+  border: 1px solid var(--md-outline-var); padding: 1.5rem;
+  margin-bottom: 1rem; box-shadow: var(--md-elev1);
+}
+.card-row { display: flex; gap: 1rem; margin-bottom: 1rem; flex-wrap: wrap; }
+.card-row .card { flex: 1; min-width: 200px; margin-bottom: 0; }
+.card-label { font-size: 0.72rem; font-weight: 500; text-transform: uppercase; letter-spacing: 0.08em; color: var(--md-outline); margin-bottom: 0.4rem; }
+.card-value { font-size: 0.9rem; color: var(--md-on-surface); }
+.card-value small { color: var(--md-outline); }
+
+/* ── Flow diagram ────────────────────────────────────────────────── */
+.flow-diagram {
+  background: var(--md-surface-1); border: 1px solid var(--md-outline-var);
+  border-radius: var(--md-shape-lg); padding: 2rem 1.5rem;
+  margin: 1.25rem 0; overflow-x: auto;
+}
+.flow { display: flex; align-items: stretch; flex-wrap: nowrap; gap: 0; min-width: 600px; }
+.flow-node {
+  flex: 1; background: var(--md-surface-2);
+  border: 1px solid var(--md-outline-var); border-radius: var(--md-shape-md);
+  padding: 1rem 0.75rem; text-align: center;
+  display: flex; flex-direction: column; align-items: center; justify-content: center;
+  gap: 0.25rem; transition: border-color 0.2s;
+}
+.flow-node:hover { border-color: var(--md-primary); }
+.flow-node .material-icons { font-size: 24px; color: var(--md-primary); margin-bottom: 0.25rem; }
+.flow-node.green  .material-icons { color: var(--md-success); }
+.flow-node.amber  .material-icons { color: var(--md-warning); }
+.flow-node.purple .material-icons { color: var(--md-tertiary); }
+.flow-node strong { font-size: 0.85rem; color: var(--md-on-surface); font-weight: 500; display: block; }
+.flow-node small  { font-size: 0.72rem; color: var(--md-outline); display: block; }
+.flow-node .flow-topic { font-size: 0.65rem; color: var(--md-primary); margin-top: 0.3rem; font-family: "Roboto Mono", monospace; }
+.flow-connector {
+  display: flex; flex-direction: column; align-items: center;
+  justify-content: center; padding: 0 0.4rem; min-width: 44px; gap: 0.15rem;
+}
+.flow-connector .material-icons { font-size: 18px; color: var(--md-primary); }
+.flow-connector.ble .material-icons { color: var(--md-tertiary); }
+.flow-connector span { font-size: 0.6rem; color: var(--md-outline); text-align: center; }
+
+/* ── Schematic ───────────────────────────────────────────────────── */
+.schematic-card {
+  background: var(--md-surface-1); border: 1px solid var(--md-outline-var);
+  border-radius: var(--md-shape-lg); padding: 1.5rem;
+  margin: 1.25rem 0; box-shadow: var(--md-elev2);
+}
+.schematic-card svg { display: block; width: 100%; height: auto; }
+
+/* ── Tables ──────────────────────────────────────────────────────── */
+.table-wrap { border-radius: var(--md-shape-md); overflow: hidden; border: 1px solid var(--md-outline-var); margin: 1rem 0; }
+table { width: 100%; border-collapse: collapse; font-size: 0.86rem; }
+thead tr { background: var(--md-surface-3); }
+th { padding: 0.75rem 1rem; text-align: left; color: var(--md-on-surface); font-weight: 500; font-size: 0.8rem; text-transform: uppercase; letter-spacing: 0.05em; }
+td { padding: 0.7rem 1rem; border-top: 1px solid var(--md-outline-var); color: var(--md-on-surface-var); vertical-align: top; }
+tbody tr:hover { background: rgba(130,180,255,0.04); }
+td:first-child { color: var(--md-on-surface); font-weight: 500; font-family: "Roboto Mono", monospace; font-size: 0.82rem; }
+
+/* ── Code ────────────────────────────────────────────────────────── */
+.code-block {
+  background: #0d1117; border: 1px solid var(--md-outline-var);
+  border-radius: var(--md-shape-md); overflow: hidden; margin: 0.8rem 0 1.2rem;
+}
+.code-header {
+  background: var(--md-surface-3); padding: 0.5rem 1rem;
+  display: flex; align-items: center; justify-content: space-between;
+  border-bottom: 1px solid var(--md-outline-var);
+}
+.code-header span { font-size: 0.75rem; color: var(--md-outline); font-family: "Roboto Mono", monospace; }
+.code-header .material-icons { font-size: 16px; color: var(--md-outline); cursor: pointer; }
+.code-header .material-icons:hover { color: var(--md-primary); }
+pre { padding: 1rem 1.25rem; overflow-x: auto; font-size: 0.82rem; line-height: 1.6; background: transparent; border: none; border-radius: 0; margin: 0; }
+code { font-family: "Roboto Mono", monospace; color: #c9d1d9; }
+p code, li code {
+  background: var(--md-surface-3); padding: 0.1em 0.45em;
+  border-radius: var(--md-shape-xs); font-size: 0.82em;
+  color: var(--md-primary); font-family: "Roboto Mono", monospace;
+  border: 1px solid var(--md-outline-var);
+}
+
+/* ── Alert banners ───────────────────────────────────────────────── */
+.alert {
+  display: flex; gap: 0.75rem; align-items: flex-start;
+  border-radius: var(--md-shape-md); padding: 0.9rem 1rem;
+  margin: 1rem 0; font-size: 0.875rem;
+}
+.alert .material-icons { font-size: 20px; flex-shrink: 0; margin-top: 0.1rem; }
+.alert-body { color: var(--md-on-surface-var); }
+.alert-body strong { color: var(--md-on-surface); }
+.alert.info    { background: rgba(130,180,255,0.08); border: 1px solid rgba(130,180,255,0.2); }
+.alert.info    .material-icons { color: var(--md-primary); }
+.alert.warning { background: rgba(255,183,77,0.08);  border: 1px solid rgba(255,183,77,0.2); }
+.alert.warning .material-icons { color: var(--md-warning); }
+
+/* ── Numbered steps ──────────────────────────────────────────────── */
+.steps { display: flex; flex-direction: column; gap: 0; margin: 1rem 0; }
+.step  { display: flex; gap: 1rem; padding: 1rem 0; position: relative; }
+.step:not(:last-child)::after {
+  content: ''; position: absolute; left: 19px; top: 48px; bottom: 0;
+  width: 2px; background: var(--md-outline-var);
+}
+.step-num {
+  width: 40px; height: 40px; border-radius: 50%; flex-shrink: 0;
+  background: var(--md-primary-container);
+  display: flex; align-items: center; justify-content: center;
+  font-weight: 700; font-size: 0.9rem; color: var(--md-on-primary-cont);
+  position: relative; z-index: 1;
+}
+.step-body h3 { margin-top: 0.5rem; }
+.step-body p  { margin-bottom: 0.5rem; }
+
+/* ── BLE / protocol sequence steps ──────────────────────────────── */
+.ble-steps { display: flex; flex-direction: column; gap: 0.5rem; margin: 1rem 0; }
+.ble-step {
+  display: flex; align-items: center; gap: 1rem;
+  background: var(--md-surface-2); border: 1px solid var(--md-outline-var);
+  border-radius: var(--md-shape-md); padding: 0.75rem 1rem;
+  transition: border-color 0.15s;
+}
+.ble-step:hover { border-color: var(--md-primary); }
+.ble-step-n {
+  width: 28px; height: 28px; border-radius: 50%; flex-shrink: 0;
+  background: var(--md-primary-container); color: var(--md-on-primary-cont);
+  display: flex; align-items: center; justify-content: center;
+  font-size: 0.75rem; font-weight: 700;
+}
+.ble-step-text { font-size: 0.875rem; color: var(--md-on-surface-var); flex: 1; }
+.ble-step-text strong { color: var(--md-on-surface); }
+
+/* ── Reference grid ──────────────────────────────────────────────── */
+.ref-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 0.75rem; margin: 1rem 0; }
+.ref-card {
+  background: var(--md-surface-1); border: 1px solid var(--md-outline-var);
+  border-radius: var(--md-shape-lg); padding: 1rem 1.1rem;
+  display: flex; align-items: flex-start; gap: 0.85rem;
+  text-decoration: none; color: inherit;
+  transition: border-color 0.2s, box-shadow 0.2s;
+}
+.ref-card:hover { border-color: var(--md-primary); box-shadow: var(--md-elev2); text-decoration: none; }
+.ref-icon {
+  width: 38px; height: 38px; border-radius: var(--md-shape-sm); flex-shrink: 0;
+  background: var(--md-primary-container);
+  display: flex; align-items: center; justify-content: center;
+}
+.ref-icon .material-icons { font-size: 20px; color: var(--md-on-primary-cont); }
+.ref-icon.green  { background: var(--md-success-container); }
+.ref-icon.green  .material-icons { color: var(--md-success); }
+.ref-icon.amber  { background: var(--md-warning-container); }
+.ref-icon.amber  .material-icons { color: var(--md-warning); }
+.ref-icon.purple { background: rgba(59,41,72,0.8); }
+.ref-icon.purple .material-icons { color: var(--md-tertiary); }
+.ref-icon.red    { background: rgba(147,0,10,0.4); }
+.ref-icon.red    .material-icons { color: var(--md-error); }
+.ref-title { font-size: 0.9rem; font-weight: 500; color: var(--md-on-surface); display: block; margin-bottom: 0.2rem; }
+.ref-desc  { font-size: 0.78rem; color: var(--md-outline); line-height: 1.4; display: block; }
+
+/* ── Footer ──────────────────────────────────────────────────────── */
+footer {
+  border-top: 1px solid var(--md-outline-var); margin-left: 80px;
+  padding: 1.5rem 3rem; display: flex; align-items: center; gap: 0.5rem;
+  color: var(--md-outline); font-size: 0.8rem;
+}
+footer .material-icons { font-size: 16px; }
+
+/* ── Responsive ──────────────────────────────────────────────────── */
+@media (max-width: 700px) {
+  .nav { display: none; }
+  .layout, footer { margin-left: 0; }
+  .hero, .content { padding: 2rem 1.25rem; }
+  .flow { flex-wrap: wrap; min-width: unset; }
+}
+
+/* ── Project-specific overrides ──────────────────────────────────── */
+.screenshot-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  gap: 1.5rem;
+  margin-top: 1.5rem;
+}
+.screenshot-card {
+  margin: 0;
+  background: var(--md-surface-1);
+  border: 1px solid var(--md-outline);
+  border-radius: 16px;
+  overflow: hidden;
+  cursor: pointer;
+  transition: border-color 0.2s, box-shadow 0.2s;
+}
+.screenshot-card:hover {
+  border-color: var(--md-primary);
+  box-shadow: 0 4px 20px rgba(130,180,255,0.15);
+}
+.screenshot-card img {
+  width: 100%;
+  height: 200px;
+  object-fit: cover;
+  display: block;
+}
+.screenshot-card figcaption {
+  padding: 0.75rem 1rem;
+  font-size: 0.85rem;
+  color: var(--md-on-surface-var);
+}
+.lightbox-overlay {
+  display: none;
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,0.85);
+  z-index: 1000;
+  align-items: center;
+  justify-content: center;
+  padding: 2rem;
+}
+.lightbox-overlay.open { display: flex; }
+.lightbox-overlay img {
+  max-width: 100%;
+  max-height: 90vh;
+  border-radius: 8px;
+  box-shadow: 0 8px 40px rgba(0,0,0,0.6);
+}
+.lightbox-close {
+  position: absolute;
+  top: 1rem; right: 1.5rem;
+  color: #fff;
+  font-size: 2rem;
+  cursor: pointer;
+  background: none;
+  border: none;
+  line-height: 1;
+}
+
+  </style>
+</head>
+<body>
+
+<!-- ── Navigation Rail ─────────────────────────────────────────────── -->
+<nav class="nav">
+  <div class="nav-logo">
+    <span class="material-icons">air</span>
+  </div>
+  <a class="nav-item active" href="#overview">
+    <div class="nav-pill"><span class="material-icons">info</span></div>
+    Overview
+  </a>
+  <a class="nav-item" href="#screenshots">
+    <div class="nav-pill"><span class="material-icons">photo_library</span></div>
+    Screen
+  </a>
+  <a class="nav-item" href="#hardware">
+    <div class="nav-pill"><span class="material-icons">memory</span></div>
+    HW
+  </a>
+  <a class="nav-item" href="#schematic">
+    <div class="nav-pill"><span class="material-icons">electrical_services</span></div>
+    Wiring
+  </a>
+  <a class="nav-item" href="#pinout">
+    <div class="nav-pill"><span class="material-icons">developer_board</span></div>
+    Pins
+  </a>
+  <a class="nav-item" href="#firmware">
+    <div class="nav-pill"><span class="material-icons">code</span></div>
+    FW
+  </a>
+  <a class="nav-item" href="#api">
+    <div class="nav-pill"><span class="material-icons">hub</span></div>
+    API
+  </a>
+  <a class="nav-item" href="#ble">
+    <div class="nav-pill"><span class="material-icons">bluetooth</span></div>
+    BLE
+  </a>
+  <a class="nav-item" href="#structure">
+    <div class="nav-pill"><span class="material-icons">folder_open</span></div>
+    Files
+  </a>
+  <a class="nav-item" href="#references">
+    <div class="nav-pill"><span class="material-icons">menu_book</span></div>
+    Refs
+  </a>
+</nav>
+
+<!-- ── Layout ──────────────────────────────────────────────────────── -->
+<div class="layout">
+
+  <!-- ── Hero ──────────────────────────────────────────────────────── -->
+  <header class="hero">
+    <div class="hero-inner">
+      <div class="hero-eyebrow">
+        <span class="material-icons">air</span>
+        ESP32 Firmware &middot; IoT Bridge
+      </div>
+      <h1>Whisper<span>Bridge</span></h1>
+      <p class="hero-sub">WiFi/MQTT-to-BLE bridge that lets Home Assistant control a Vent-Axia Svara fan via a one-shot boost command.</p>
+      <div class="chip-row">
+        <span class="chip"><span class="material-icons">code</span>C++</span>
+        <span class="chip"><span class="material-icons">memory</span>ESP32 DevKit V1</span>
+        <span class="chip amber"><span class="material-icons">router</span>MQTT</span>
+        <span class="chip purple"><span class="material-icons">bluetooth</span>BLE / NimBLE</span>
+        <span class="chip"><span class="material-icons">wifi</span>WiFi 2.4 GHz</span>
+        <span class="chip green"><span class="material-icons">home</span>Home Assistant</span>
+        <span class="chip amber"><span class="material-icons">build</span>PlatformIO</span>
+        <span class="chip purple"><span class="material-icons">storage</span>LittleFS</span>
+      </div>
+    </div>
+  </header>
+
+  <div class="content">
+
+    <!-- ── Overview ──────────────────────────────────────────────────── -->
+    <section class="section" id="overview">
+      <div class="section-header">
+        <div class="section-icon">
+          <span class="material-icons">info</span>
+        </div>
+        <h2>Overview</h2>
+      </div>
+
+      <p>WhisperBridge is an ESP32 firmware that acts as a protocol bridge between a home automation network and a Vent-Axia Svara bathroom fan. The fan exposes a proprietary BLE GATT interface — it has no WiFi or MQTT support. WhisperBridge fills that gap: it connects to the home network, subscribes to an MQTT topic, and translates each <code>ON</code> command into the correct BLE authentication + boost command sequence targeted at the fan by MAC address.</p>
+
+      <p>On first boot with no stored WiFi credentials, the device starts a WPA2 captive-portal access point (<code>WhisperBridge-Setup</code>) at <code>10.0.0.1</code>. The user connects, scans nearby networks, picks one, and saves credentials — the device then restarts in station mode. In station mode it registers as <code>whisperbridge.local</code> via mDNS, starts ArduinoOTA, and publishes Home Assistant MQTT auto-discovery so the fan appears automatically as a switch entity with the <code>mdi:fan</code> icon.</p>
+
+      <p>The BLE authentication and boost sequence blocks for hundreds of milliseconds. Rather than stalling the main loop, this work runs in a dedicated FreeRTOS task (<code>ble_boost</code>, 8 KB stack). The main loop posts a task notification to trigger a run; the BLE task atomically updates <code>_running</code> and <code>_lastSuccess</code> flags that the loop reads safely without locks. Once the task completes, the loop detects the falling edge on <code>_running</code> and publishes <code>OFF</code> to the state topic to keep Home Assistant in sync.</p>
+
+      <h3>System Flow</h3>
+      <div class="flow-diagram">
+        <div class="flow">
+          <div class="flow-node green">
+            <span class="material-icons">home</span>
+            <strong>Home Assistant</strong>
+            <small>Automation / UI</small>
+          </div>
+          <div class="flow-connector">
+            <span class="material-icons">arrow_forward</span>
+            <span>MQTT publish</span>
+          </div>
+          <div class="flow-node amber">
+            <span class="material-icons">router</span>
+            <strong>MQTT Broker</strong>
+            <small>Mosquitto / etc.</small>
+            <span class="flow-topic">whisperbridge/&lt;id&gt;/boost</span>
+          </div>
+          <div class="flow-connector">
+            <span class="material-icons">arrow_forward</span>
+            <span>WiFi / TCP</span>
+          </div>
+          <div class="flow-node">
+            <span class="material-icons">developer_board</span>
+            <strong>WhisperBridge</strong>
+            <small>ESP32 + NimBLE</small>
+            <span class="flow-topic">…/boost/state</span>
+          </div>
+          <div class="flow-connector ble">
+            <span class="material-icons">arrow_forward</span>
+            <span>BLE GATT</span>
+          </div>
+          <div class="flow-node purple">
+            <span class="material-icons">air</span>
+            <strong>Svara Fan</strong>
+            <small>Vent-Axia</small>
+          </div>
+        </div>
+      </div>
+
+      <h3>BLE Boost Sequence</h3>
+      <div class="ble-steps">
+        <div class="ble-step">
+          <div class="ble-step-n">1</div>
+          <div class="ble-step-text">MQTT broker delivers <strong>ON</strong> to <code>whisperbridge/&lt;id&gt;/boost</code> — <code>MqttManager::onMessage</code> fires on the lwIP task</div>
+        </div>
+        <div class="ble-step">
+          <div class="ble-step-n">2</div>
+          <div class="ble-step-text"><code>Ble.trigger()</code> sends a FreeRTOS task notification to the <code>ble_boost</code> task; returns immediately — lwIP task is not blocked</div>
+        </div>
+        <div class="ble-step">
+          <div class="ble-step-n">3</div>
+          <div class="ble-step-text">BLE task wakes, sets <code>_running = true</code>, calls <code>NimBLEDevice::createClient()</code> and connects to the fan by <strong>MAC address</strong></div>
+        </div>
+        <div class="ble-step">
+          <div class="ble-step-n">4</div>
+          <div class="ble-step-text">Discovers auth service <code>e6834e4b-…</code>, writes 4-byte PIN <code>0xe3 0x14 0x62 0x05</code> to auth characteristic; waits 200 ms for firmware settle</div>
+        </div>
+        <div class="ble-step">
+          <div class="ble-step-n">5</div>
+          <div class="ble-step-text">Discovers command service <code>c119e858-…</code>, writes 5-byte boost payload <code>0x01 0x60 0x09 0x84 0x03</code> to command characteristic</div>
+        </div>
+        <div class="ble-step">
+          <div class="ble-step-n">6</div>
+          <div class="ble-step-text">Disconnects and deletes the NimBLE client; sets <code>_running = false</code>, <code>_lastSuccess</code> reflects the write result</div>
+        </div>
+        <div class="ble-step">
+          <div class="ble-step-n">7</div>
+          <div class="ble-step-text">Main <code>loop()</code> detects the <code>_running</code> falling edge and publishes <strong>OFF</strong> retained to <code>whisperbridge/&lt;id&gt;/boost/state</code></div>
+        </div>
+      </div>
+
+      <div class="alert info">
+        <span class="material-icons">info</span>
+        <div class="alert-body"><strong>Key architectural constraint:</strong> <code>AsyncWebServer</code> and MQTT callbacks run on the lwIP task — calling <code>delay()</code> or <code>ESP.restart()</code> from those contexts corrupts the network stack. Any action requiring a restart (credential save, factory reset) sets the <code>s_pendingRestart</code> flag which <code>loop()</code> polls safely on the Arduino task.</div>
+      </div>
+    </section>
+
+
+    <!-- screenshots -->
+    <section class="section" id="screenshots">
+      <div class="section-header">
+        <div class="section-icon purple">
+          <span class="material-icons">photo_library</span>
+        </div>
+        <h2>Screenshots</h2>
+      </div>
+      <div class="screenshot-grid">
+        <figure class="screenshot-card">
+          <img src="data:image/png;base64,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AABAFFwFGgAAgCgIYAAAAKIggAEAAIiCAAYAACAKAhgAAIAoCGAAAACiIIABAACIggAGAAAgCgIYAACAKAhgAAAAoiCAAQAAiIIABgAAIAoCGAAAgCgIYAAAAKIggAEAAIiCAAYAACAKAhgAAIAoCGAAAACiIIABAACIggAGAAAgCgIYAACAKAhgAAAAoiCAAQAAiIIABgAAIAoCGAAAgCgIYAAAAKIggAEAAIiCAAYAACAKAhgAAIAoCGAAAACiIIABAACIggAGAAAgCgIYAACAKAhgAAAAoiCAAQAAiIIABgAAIAoCGAAAgCgIYAAAAKIggAEAAIiCAAYAACAKAhgAAIAoCGAAAACiIIABAACIggAGAAAgCgIYAACAKAhgAAAAoiCAAQAAiIIABgAAIAoCGAAAgCgIYAAAAKIggAEAAIiCAAYAACAKAhgAAIAoCGAAAACiIIABAACIggAGAAAgCgIYAACAKAhgAAAAoiCAAQAAiIIABgAAIAoCGAAAgCgIYAAAAKIggAEAAIiCAAYAACAKAhgAAIAoCGAAAACiIIABAACIggAGAAAgCgIYAACAKAhgAAAAoiCAAQAAiIIABgAAIAoCGAAAgCgIYAAAAKIggAEAAIiCAAYAACAKAhgAAIAoCGAAAACiIIABAgAAMRDAAAAAREEAAwAAEAUBDAAAQBQEMAAAAFEQwAAAAERBAAMAABAFAQwAAEAUBDAAAABREMAAAABEQQADAAAQBQEMAABAFAQwAAAAURDAAAAAREEAAwAAEAUBDAAAQBQEMAAAAFEQwAAAAERBAAMAABAFAQwAAEAUBDAAAABREMAAAABEQQADAAAQBQEMAABAFAQwAAAAURDAAAAAREEAAwAAEAUBDAAAQBQEMAAAAFEQwAAAAERBAAMAABAFAQwAAEAUBDAAAABREMAAAABEQQADAAAQBQEMAABAFAQwAAAAURDAAAAAREEAAwAAEAUBDAAAQBQEMAAAAFEQwAAAAERBAAMAABAFAQwAAEAUBDAAAABREMAAAABEQQADAAAQBQEMAABAFAQwAAAAURDAAAAAREEAAwAAEAUBDAAAQBQEMAAAAFEQwAAAAERBAAMAABAFAQwAAEAUBDAAAABREMAAAABEQQADAAAQBQEMAABAFAQwAAAAURDAAAAAREEAAwAAEAUBDAAAQBQEMAAAAFEQwAAAAERBAAMAABAFAQwAAEAUBDAAAABREMAAAABEQQADAAAQBQEMAABAFAQwAAAAURDAAAAAREEAAwAAEAUBDAAAQBQEMAAAAFEQwAAAAERBAAMAABAFAQwAAEAUBDAAAABREMAAAABEQQADAAAQBQEMAABAFAQwAAAAURDAAAAAREEAAwAAEAUBDAAAQBQEMAAAAFEQwAAAAERBAAMAABAFAQwAAEAUBDAAAABREMAAAABEQQADAAAQBQEMAABAFAQwAAAAURDAAAAAREEAAwAAEAUBDAAAQBQEMAAAAFEQwAAAAERBAAMAABAFAQwAAEAUBDAAAABREMAAAABEQQADAAAQBQEMAABAFAQwAAAAURDAAAAAREEAAwAAEAUBDAAAQBQEMAAAAFEQwAAAAERBAAMAABAFAQwAAEAUBDAAAABREMAAAABEQQADAAAQBQEMAABAFAQwAAAAURDAAAAAREEAAwAAEAUBDAAAQBQEMAAAAFEQwAAAAERBAAMAABAFAQwAAEAUBDAAAABREMAAAABEQQADAAAQBQEMAABAFAQwAAAAURDAAAAAREEAAwAAEAUBDAAAQBQEMAAAAFEQwAAAAERBAAMAABAFAQwAAEAUBDAAAABREMAAAABEQQADAAAQBQEMAABAFAQwAAAAURDAAAAAREEAAwAAEAUBDAAAQBQEMAAAAFEQwAAAAERBAAMAABAFAQwAAEAUBDAAAABREMAAAABEQQADAAAQBQEMAABAFAQwAAAAURDAAAAAREEAAwAAEAUBDAAAQBQEMAAAAFEQwAAAAERBAAMAABAFAQwAAEAUBDAAAABREMAAAABEQQADAAAQBQEMAABAFAQwAAAAURDAAAAAREEAAwAAEAUBDAAAQBQEMAAAAFEQwAAAAERBAAMAABAFAQwAAEAUBDAAAABREMAAAABEQQADAAAQBQEMAABAFAQwAAAAURDAAAAAREEAAwAAEAUBDAAAQBQEMAAAAFEQwAAAAERBAAMAABAFAQwAAEAUBDAAAABREMAAAABEQQADAAAQBQEMAABAFAQwAAAAURDAAAAAREEAAwAAEAUBDAAAQBQEMAAAAFEQwAAAAERBAAMAABAFAQwAAEAUBDAAAABREMAAAABEQQADAAAQBQEMAABAFAQwAAAAURDAAAAAREEAAwAAEAUBDAAAQBQEMAAAAFEQwAAAAERBAAMAABAFAQwAAEAUBDAAAABREMAAAABEQQADAAAQBQEMAABAFAQwAAAAURDAAAAAREEAAwAAEAUBDAAAQBQEMAAAAFEQwAAAAERBAAMAABAFAQwAAEAUBDAAAABREMAAAABEQQADAAAQBQEMAABAFAQwAAAAURDAAAAAREEAAwAAEAUBDAAAQBQEMAAAAFEQwAAAAERBAAMAABAFAQwAAEAUBDAAAABREMAAAABEQQADAAAQBQEMAABAFAQwAAAAURDAAAAAREEAAwAAEAUBDAAAQBQEMAAAAFEQwAAAAERBAAMAABAFAQwAAEAUBDAAAABREMAAAABEQQADAAAQBQEMAABAFAQwAAAAURDAAAAAREEAAwAAEAUBDAAAQBQEMAAAAFEQwAAAAERBAAMAABAFAQwAAEAUBDAAAABREMAAAABEQQADAAAQBQEMAABAFAQwAAAAURDAAAAAREEAAwAAEAUBDAAAQBQEMAAAAFEQwAAAAERBAAMAABAFAQwAAEAUBDAAAABREMAAAABEQQADAAAQBQEMAABAFAQwAAAAURDAAAAAREEAAwAAEAUBDAAAQBQEMAAAAFEQwAAAAERBAAMAABAFAQwAAEAUBDAAAABREMAAAABEQQADAAAQBQEMAABAFAQwAAAAURDAAAAAREEAAwAAEAUBDAAAQBQEMAAAAFEQwAAAAERBAAMAABAFAQwAAEAUBDAAAABR+B8AAAD//3ePeJIAAAAGSURBVAMA/c7TqsVJwnQAAAAASUVORK5CYII=" alt="Main UI showing device status and Boost button" loading="lazy">
+          <figcaption>Station mode UI &mdash; status card, network info, BLE result, and Boost button</figcaption>
+        </figure>
+        <figure class="screenshot-card">
+          <img src="data:image/png;base64,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OjoCAAAA1IG+vr6ZN+7s7AyzYQg0AAAAuSAAAwAAkAsCMAAAALlgDjAAAAC5oAIMAABALgjAAAAA5IIADAAAQC4IwAAAAOSCAAwAAEAuCMAAAADkggAMAABALgjAAAAA5IIADAAAQC4IwAAAAOSCAAwAAEAuCMAAAADkggAMAABALgjAAAAA5IIADAAAQC4IwAAAAOSCAAwAAEAuCMAAAADkggAMAABALgjAAAAA5IIADAAAQC4IwAAAAOSCAAwAAEAuCMAAAADkggAMAABALgjAAAAA5IIADAAAQC4IwAAAAOSCAAwAAEAuCMAAAADkggAMAABALgjAAAAA5IIADAAAQC4IwAAAAOSCAAwAAEAuCMAAAADkggAMAABALgjAAAAA5IIADAAAQC4IwAAAAOSCAAwAAEAuCMAAAADkggAMAABALgjAAAAA5IIADAAAQC4IwAAAAOSCAAwAAEAuCMAAAADkggAMAABALgjAAAAA5IIADAAAQC4h3LnnAAABHklEQVQIwAAAAOSCAAwAAEAuCMAAAADkggAMAABALgjAAAAA5IIADAAAQC4IwAAAAOSCAAwAAEAuCMAAAADkggAMAABALgjAAAAA5IIADAAAQC4IwAAAAOSCAAwAAEAuCMAAAADkggAMAABALgjAAAAA5IIADAAAQC4IwAAAAOSCAAwAAEAuCMAAAADkggAMAABALgjAAAAA5IIADAAAQC4IwAAAAOSCAAwAAEAuCMAAAADkggAMAABALgjAAAAA5IIADAAAQC4IwAAAAOSCAAwAAEAuCMAAAADkggAMAABALgjAAAAA5IIADAAAQC4IwAAAAOSCAAwAAEAuCMAAAADkggAMAABALgjAAAAA5IIADAAAQC4IwAAAAOTC/wMAAP//mWlaswAAAAZJREFUAwCspdRbd4HaPwAAAABJRU5ErkJggg==" alt="WiFi setup page with network list and credential form" loading="lazy">
+          <figcaption>Captive-portal setup &mdash; async WiFi scan with signal strength, lock icons, and credential form</figcaption>
+        </figure>
+      </div>
+    </section>
+    <!-- ── Hardware ───────────────────────────────────────────────────── -->
+    <section class="section" id="hardware">
+      <div class="section-header">
+        <div class="section-icon green">
+          <span class="material-icons">memory</span>
+        </div>
+        <h2>Hardware</h2>
+      </div>
+
+      <div class="card-row">
+        <div class="card">
+          <div class="card-label">MCU</div>
+          <div class="card-value">ESP32 DevKit V1<br><small>ESP32-WROOM-32, dual-core 240 MHz, 4 MB flash</small></div>
+        </div>
+        <div class="card">
+          <div class="card-label">Connectivity</div>
+          <div class="card-value">WiFi 802.11 b/g/n + BLE 4.2<br><small>2.4 GHz integrated PCB antenna</small></div>
+        </div>
+        <div class="card">
+          <div class="card-label">Power</div>
+          <div class="card-value">USB 5 V / 500 mA minimum<br><small>any phone charger or USB wall adapter</small></div>
+        </div>
+        <div class="card">
+          <div class="card-label">Optional — Status LED</div>
+          <div class="card-value">LED + 330 &Omega; resistor on GPIO 2<br><small>HIGH while BLE boost sequence is running; enable via <code>STATUS_LED_PIN</code></small></div>
+        </div>
+        <div class="card">
+          <div class="card-label">Optional — Reset Button</div>
+          <div class="card-value">Momentary switch on GPIO 0 (BOOT)<br><small>Hold 5 s to clear WiFi credentials; enable via <code>RESET_BUTTON_PIN</code></small></div>
+        </div>
+      </div>
+
+      <div class="alert warning">
+        <span class="material-icons">warning</span>
+        <div class="alert-body"><strong>BLE TX power:</strong> NimBLE is initialised at maximum power (<code>ESP_PWR_LVL_P9</code>) because the fan may be across a room or behind a wall. If connection failures persist, move the ESP32 closer to the fan or reduce physical obstructions.</div>
+      </div>
+    </section>
+
+    <!-- ── Schematic ──────────────────────────────────────────────────── -->
+    <section class="section" id="schematic">
+      <div class="section-header">
+        <div class="section-icon amber">
+          <span class="material-icons">electrical_services</span>
+        </div>
+        <h2>Wiring</h2>
+      </div>
+      <p>The minimal build requires only a USB power supply. The optional status LED (GPIO 2) and reset button (GPIO 0) add no required components to the core circuit.</p>
+
+      <div class="schematic-card">
+        <svg width="780" height="410" viewBox="0 0 780 410" xmlns="http://www.w3.org/2000/svg"
+             font-family="'Roboto Mono', monospace" font-size="11">
+
+          <!-- Background -->
+          <rect width="780" height="410" fill="#0d1117" rx="10"/>
+          <pattern id="grid" x="0" y="0" width="20" height="20" patternUnits="userSpaceOnUse">
+            <circle cx="10" cy="10" r="0.8" fill="#1e2a3a"/>
+          </pattern>
+          <rect width="780" height="410" fill="url(#grid)" rx="10"/>
+
+          <!-- USB Power Supply -->
+          <rect x="22" y="148" width="108" height="72" rx="8" fill="#0d1a0d" stroke="#4caf50" stroke-width="1.5"/>
+          <text x="76" y="172" text-anchor="middle" fill="#4caf50" font-weight="bold" font-size="12">USB PSU</text>
+          <text x="76" y="189" text-anchor="middle" fill="#666" font-size="10">5 V / 1 A min</text>
+          <text x="76" y="204" text-anchor="middle" fill="#555" font-size="9">phone charger OK</text>
+          <rect x="126" y="165" width="8" height="22" rx="2" fill="#4caf50" opacity="0.8"/>
+          <rect x="128" y="169" width="4" height="14" rx="1" fill="#0d1a0d"/>
+
+          <!-- ESP32 DevKit V1 -->
+          <rect x="276" y="68" width="204" height="284" rx="10" fill="rgba(0,70,142,0.15)"/>
+          <rect x="272" y="64" width="204" height="284" rx="10" fill="#101828" stroke="#82b4ff" stroke-width="2"/>
+          <rect x="284" y="76" width="180" height="260" rx="6" fill="#0a1520" stroke="#1a2a3a" stroke-width="1"/>
+          <rect x="284" y="76" width="180" height="28" rx="6" fill="#0d2040"/>
+          <text x="374" y="95" text-anchor="middle" fill="#82b4ff" font-weight="bold" font-size="12">ESP32 DevKit V1</text>
+          <rect x="272" y="112" width="14" height="220" rx="3" fill="#1a2a1a" stroke="#3a3a1a" stroke-width="1"/>
+          <rect x="466" y="112" width="14" height="220" rx="3" fill="#1a2a1a" stroke="#3a3a1a" stroke-width="1"/>
+          <rect x="468" y="108" width="14" height="24" rx="3" fill="#333" stroke="#888" stroke-width="1.2"/>
+          <rect x="471" y="112" width="8" height="16" rx="1" fill="#222"/>
+          <text x="490" y="124" fill="#555" font-size="9">USB</text>
+
+          <!-- Pin badges -->
+          <rect x="256" y="116" width="28" height="14" rx="3" fill="#0d2a0d" stroke="#4caf50" stroke-width="1.2"/>
+          <text x="270" y="127" text-anchor="middle" fill="#4caf50" font-size="9" font-weight="bold">VIN</text>
+          <rect x="256" y="138" width="28" height="14" rx="3" fill="#2a0d0d" stroke="#ef5350" stroke-width="1.2"/>
+          <text x="270" y="149" text-anchor="middle" fill="#ef5350" font-size="9" font-weight="bold">GND</text>
+          <rect x="256" y="160" width="28" height="14" rx="3" fill="#0d1a2a" stroke="#ffb74d" stroke-width="1.2"/>
+          <text x="270" y="171" text-anchor="middle" fill="#ffb74d" font-size="9" font-weight="bold">IO2</text>
+
+          <!-- Function labels -->
+          <text x="295" y="127" fill="#bbb" font-size="9">5 V in (USB or VIN pin)</text>
+          <text x="295" y="149" fill="#bbb" font-size="9">Ground</text>
+          <text x="295" y="171" fill="#ffb74d" font-size="9">Status LED (optional)</text>
+
+          <!-- Chip -->
+          <rect x="330" y="148" width="88" height="60" rx="4" fill="#0a0f1a" stroke="#1e3a5f" stroke-width="1.5"/>
+          <text x="374" y="173" text-anchor="middle" fill="#2a4a7a" font-size="10">ESP32-WROOM</text>
+          <text x="374" y="188" text-anchor="middle" fill="#1e3050" font-size="9">240 MHz dual-core</text>
+
+          <!-- Antenna -->
+          <text x="368" y="226" text-anchor="end" fill="#82b4ff" font-size="9">2.4 GHz antenna</text>
+          <line x1="370" y1="221" x2="400" y2="221" stroke="#82b4ff" stroke-width="1.5"/>
+          <line x1="382" y1="221" x2="382" y2="204" stroke="#82b4ff" stroke-width="1.5"/>
+          <line x1="375" y1="210" x2="389" y2="210" stroke="#82b4ff" stroke-width="1.2"/>
+          <line x1="377" y1="204" x2="387" y2="204" stroke="#82b4ff" stroke-width="1"/>
+          <circle cx="382" cy="226" r="2.5" fill="#82b4ff"/>
+
+          <!-- WiFi arc -->
+          <text x="374" y="258" text-anchor="middle" fill="#82b4ff" font-size="9">WiFi 2.4 GHz</text>
+          <path d="M344,268 Q374,259 404,268" stroke="#82b4ff" stroke-width="1" fill="none" opacity="0.7"/>
+          <path d="M352,274 Q374,267 396,274" stroke="#82b4ff" stroke-width="1" fill="none" opacity="0.7"/>
+          <path d="M360,280 Q374,274 388,280" stroke="#82b4ff" stroke-width="1" fill="none" opacity="0.7"/>
+          <circle cx="374" cy="283" r="2" fill="#82b4ff"/>
+          <text x="374" y="297" text-anchor="middle" fill="#444" font-size="8">&#x2192; MQTT broker</text>
+
+          <!-- BLE arc -->
+          <text x="374" y="315" text-anchor="middle" fill="#d6bee4" font-size="9">BLE 2.4 GHz</text>
+          <path d="M344,325 Q374,316 404,325" stroke="#d6bee4" stroke-width="1" fill="none" opacity="0.7"/>
+          <path d="M352,331 Q374,324 396,331" stroke="#d6bee4" stroke-width="1" fill="none" opacity="0.7"/>
+          <path d="M360,337 Q374,331 388,337" stroke="#d6bee4" stroke-width="1" fill="none" opacity="0.7"/>
+          <circle cx="374" cy="340" r="2" fill="#d6bee4"/>
+          <text x="374" y="354" text-anchor="middle" fill="#444" font-size="8">&#x2192; Svara fan (wireless)</text>
+
+          <!-- Power wires -->
+          <line x1="134" y1="171" x2="254" y2="123" stroke="#4caf50" stroke-width="2" stroke-dasharray="7,4"/>
+          <line x1="134" y1="196" x2="254" y2="145" stroke="#ef5350" stroke-width="2" stroke-dasharray="7,4"/>
+          <text x="188" y="142" text-anchor="middle" fill="#4caf50" font-size="10" transform="rotate(-19,188,142)">5 V</text>
+          <text x="194" y="180" text-anchor="middle" fill="#ef5350" font-size="10" transform="rotate(-10,194,180)">GND</text>
+
+          <!-- Optional LED callout -->
+          <rect x="574" y="60" width="150" height="22" rx="11" fill="#2a1800" stroke="#ffb74d" stroke-width="1"/>
+          <text x="649" y="75" text-anchor="middle" fill="#ffb74d" font-size="10" font-weight="bold">OPTIONAL &#x2014; status LED</text>
+
+          <!-- LED symbol -->
+          <line x1="622" y1="106" x2="622" y2="134" stroke="#ffb74d" stroke-width="2"/>
+          <polygon points="612,134 632,134 622,150" fill="#2a1800" stroke="#ffb74d" stroke-width="1.5"/>
+          <line x1="612" y1="150" x2="632" y2="150" stroke="#ffb74d" stroke-width="2"/>
+          <line x1="622" y1="150" x2="622" y2="172" stroke="#888" stroke-width="1.5"/>
+          <line x1="635" y1="138" x2="648" y2="128" stroke="#ffb74d" stroke-width="1.2" stroke-dasharray="2,2"/>
+          <line x1="638" y1="145" x2="654" y2="140" stroke="#ffb74d" stroke-width="1.2" stroke-dasharray="2,2"/>
+          <text x="622" y="100" text-anchor="middle" fill="#ffb74d" font-size="10">LED</text>
+          <text x="622" y="188" text-anchor="middle" fill="#888" font-size="9">any colour</text>
+
+          <!-- Resistor -->
+          <line x1="622" y1="188" x2="622" y2="202" stroke="#888" stroke-width="1.5"/>
+          <rect x="610" y="202" width="24" height="44" rx="2" fill="#1a1400" stroke="#aaa" stroke-width="1.5"/>
+          <line x1="612" y1="214" x2="634" y2="214" stroke="#ff6b35" stroke-width="2.5"/>
+          <line x1="612" y1="222" x2="634" y2="222" stroke="#ff6b35" stroke-width="2.5"/>
+          <line x1="612" y1="230" x2="634" y2="230" stroke="#888" stroke-width="2.5"/>
+          <text x="648" y="218" fill="#aaa" font-size="10">330 &#x3a9;</text>
+          <text x="648" y="231" fill="#666" font-size="9">&#xbc; W</text>
+          <line x1="622" y1="246" x2="622" y2="266" stroke="#888" stroke-width="1.5"/>
+
+          <!-- GND symbol -->
+          <line x1="590" y1="266" x2="660" y2="266" stroke="#888" stroke-width="1.5"/>
+          <line x1="612" y1="266" x2="632" y2="266" stroke="#888" stroke-width="2"/>
+          <line x1="615" y1="272" x2="629" y2="272" stroke="#888" stroke-width="1.5"/>
+          <line x1="619" y1="278" x2="625" y2="278" stroke="#888" stroke-width="1"/>
+          <text x="670" y="275" fill="#888" font-size="10">GND</text>
+
+          <!-- GPIO signal wire -->
+          <line x1="284" y1="167" x2="572" y2="167" stroke="#ffb74d" stroke-width="1.5" stroke-dasharray="6,4"/>
+          <line x1="572" y1="167" x2="572" y2="106" stroke="#ffb74d" stroke-width="1.5"/>
+          <line x1="572" y1="106" x2="622" y2="106" stroke="#ffb74d" stroke-width="1.5"/>
+          <text x="428" y="161" text-anchor="middle" fill="#ffb74d" font-size="9">GPIO 2 (optional status LED)</text>
+
+          <!-- GND return wire -->
+          <line x1="284" y1="145" x2="542" y2="145" stroke="#ef5350" stroke-width="1" stroke-dasharray="5,4" opacity="0.5"/>
+          <line x1="542" y1="145" x2="542" y2="266" stroke="#ef5350" stroke-width="1" stroke-dasharray="5,4" opacity="0.5"/>
+          <line x1="542" y1="266" x2="590" y2="266" stroke="#ef5350" stroke-width="1" stroke-dasharray="5,4" opacity="0.5"/>
+
+          <!-- Legend -->
+          <rect x="22" y="306" width="230" height="88" rx="8" fill="#0a0f1a" stroke="#1e2a3a" stroke-width="1"/>
+          <text x="38" y="326" fill="#82b4ff" font-size="11" font-weight="bold">LEGEND</text>
+          <line x1="38" y1="340" x2="75" y2="340" stroke="#4caf50" stroke-width="2" stroke-dasharray="7,4"/>
+          <text x="82" y="344" fill="#888" font-size="10">5 V power</text>
+          <line x1="38" y1="355" x2="75" y2="355" stroke="#ef5350" stroke-width="2" stroke-dasharray="7,4"/>
+          <text x="82" y="359" fill="#888" font-size="10">Ground</text>
+          <line x1="38" y1="370" x2="75" y2="370" stroke="#ffb74d" stroke-width="1.5" stroke-dasharray="6,4"/>
+          <text x="82" y="374" fill="#888" font-size="10">Optional LED signal</text>
+          <line x1="38" y1="385" x2="52" y2="385" stroke="#82b4ff" stroke-width="1.5"/>
+          <path d="M52,385 Q58,379 64,385 Q70,391 76,385" stroke="#82b4ff" stroke-width="1.5" fill="none"/>
+          <text x="82" y="389" fill="#888" font-size="10">Wireless (WiFi / BLE)</text>
+        </svg>
+      </div>
+    </section>
+
+    <!-- ── Pins Used ─────────────────────────────────────────────────── -->
+    <section class="section" id="pinout">
+      <div class="section-header">
+        <div class="section-icon amber">
+          <span class="material-icons">developer_board</span>
+        </div>
+        <h2>Pins Used</h2>
+      </div>
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr><th>Pin</th><th>Function</th><th>Direction</th><th>Notes</th></tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td>VIN</td>
+              <td>5 V power input</td>
+              <td>IN</td>
+              <td>Supplied from USB power adapter</td>
+            </tr>
+            <tr>
+              <td>GND</td>
+              <td>Ground</td>
+              <td>—</td>
+              <td>Common ground for board and optional LED circuit</td>
+            </tr>
+            <tr>
+              <td>GPIO 2</td>
+              <td>Status LED</td>
+              <td>OUT</td>
+              <td>Optional. HIGH while BLE boost sequence is running. On-board LED on most DevKit V1 boards. Enable with <code>#define STATUS_LED_PIN 2</code> in config.h.</td>
+            </tr>
+            <tr>
+              <td>GPIO 0</td>
+              <td>Factory reset button</td>
+              <td>IN</td>
+              <td>Optional. Pull-up input; hold LOW for 5 s to clear WiFi credentials and restart into AP mode. This is the BOOT button on most DevKit boards. Enable with <code>#define RESET_BUTTON_PIN 0</code> in config.h.</td>
+            </tr>
+            <tr>
+              <td><em>(internal)</em></td>
+              <td>WiFi 802.11 b/g/n</td>
+              <td>IN/OUT</td>
+              <td>Station or soft-AP mode. Credentials stored in NVS under namespace <code>whisper</code> via <code>Preferences</code>. mDNS hostname <code>whisperbridge.local</code>.</td>
+            </tr>
+            <tr>
+              <td><em>(internal)</em></td>
+              <td>BLE 4.2 (NimBLE)</td>
+              <td>OUT</td>
+              <td>GATT client role only. TX power <code>ESP_PWR_LVL_P9</code> (maximum). Targets fan by MAC address configured in config.h.</td>
+            </tr>
+            <tr>
+              <td><em>(internal)</em></td>
+              <td>NVS (Non-Volatile Storage)</td>
+              <td>IN/OUT</td>
+              <td>Stores WiFi SSID and password. Read on boot; written by the captive-portal <code>/api/networkset</code> endpoint. Cleared by factory reset.</td>
+            </tr>
+            <tr>
+              <td><em>(internal)</em></td>
+              <td>LittleFS (SPI flash)</td>
+              <td>IN</td>
+              <td>Read-only at runtime. Stores <code>index.html</code> and <code>setup.html</code> served by AsyncWebServer. Uploaded separately with the <code>uploadfs</code> PlatformIO target.</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+    <!-- ── Firmware ───────────────────────────────────────────────────── -->
+    <section class="section" id="firmware">
+      <div class="section-header">
+        <div class="section-icon">
+          <span class="material-icons">code</span>
+        </div>
+        <h2>Firmware</h2>
+      </div>
+
+      <p>The firmware is structured as three cooperating singletons: <code>Ble</code> (<code>BleBoost</code>), <code>Mqtt</code> (<code>MqttManager</code>), and the application entry point in <code>main.cpp</code>. Each module has a narrow public interface — NimBLE headers are kept out of <code>ble.h</code> via forward declarations, and <code>WiFiClient</code>/<code>PubSubClient</code> are file-scope statics in <code>mqtt.cpp</code>, preventing header leakage into <code>mqtt.h</code>. This keeps compile-time coupling minimal and allows the native test environment to build <code>state.h</code> without any Arduino dependencies.</p>
+
+      <p>The web UI is served from LittleFS — two plain HTML/JS pages, no frameworks, designed to fit within the flash filesystem size constraint. In AP mode only the setup endpoints are registered; in station mode the boost API, status endpoint, and MQTT manager activate. All <code>AsyncWebServer</code> callbacks are non-blocking; the <code>s_pendingRestart</code> flag pattern ensures restarts happen safely in <code>loop()</code>, not on the lwIP task.</p>
+
+      <h3>Build &amp; Flash</h3>
+      <div class="steps">
+        <div class="step">
+          <div class="step-num">1</div>
+          <div class="step-body">
+            <h3>Edit config.h</h3>
+            <p>Set <code>MQTT_HOST</code> (broker IP), <code>FAN_MAC_ADDRESS</code> (fan's Bluetooth MAC), and <code>OTA_PASSWORD</code> before flashing.</p>
+          </div>
+        </div>
+        <div class="step">
+          <div class="step-num">2</div>
+          <div class="step-body">
+            <h3>Build firmware</h3>
+            <div class="code-block">
+              <div class="code-header"><span>powershell</span><span class="material-icons">content_copy</span></div>
+              <pre><code>& "$env:USERPROFILE\.platformio\penv\Scripts\pio.exe" run -e esp32dev -d WhisperServer</code></pre>
+            </div>
+          </div>
+        </div>
+        <div class="step">
+          <div class="step-num">3</div>
+          <div class="step-body">
+            <h3>Flash firmware via USB</h3>
+            <div class="code-block">
+              <div class="code-header"><span>powershell</span><span class="material-icons">content_copy</span></div>
+              <pre><code>& "$env:USERPROFILE\.platformio\penv\Scripts\pio.exe" run -e esp32dev -t upload -d WhisperServer</code></pre>
+            </div>
+          </div>
+        </div>
+        <div class="step">
+          <div class="step-num">4</div>
+          <div class="step-body">
+            <h3>Upload web UI to LittleFS</h3>
+            <p>Filesystem and firmware are separate uploads — both must be current for the device to serve the web UI correctly.</p>
+            <div class="code-block">
+              <div class="code-header"><span>powershell</span><span class="material-icons">content_copy</span></div>
+              <pre><code>& "$env:USERPROFILE\.platformio\penv\Scripts\pio.exe" run -e esp32dev -t uploadfs -d WhisperServer</code></pre>
+            </div>
+          </div>
+        </div>
+        <div class="step">
+          <div class="step-num">5</div>
+          <div class="step-body">
+            <h3>Flash over-the-air</h3>
+            <p>After initial USB flash. Device must be reachable as <code>whisperbridge.local</code>. Requires Windows Firewall to allow inbound for <code>python.exe</code> in the PlatformIO venv.</p>
+            <div class="code-block">
+              <div class="code-header"><span>powershell</span><span class="material-icons">content_copy</span></div>
+              <pre><code>& "$env:USERPROFILE\.platformio\penv\Scripts\pio.exe" run -e esp32dev_ota -t upload -d WhisperServer</code></pre>
+            </div>
+          </div>
+        </div>
+        <div class="step">
+          <div class="step-num">6</div>
+          <div class="step-body">
+            <h3>Run native unit tests</h3>
+            <p>Unity tests for <code>parseBoostCommand</code> run entirely on the host — no Arduino hardware needed.</p>
+            <div class="code-block">
+              <div class="code-header"><span>powershell</span><span class="material-icons">content_copy</span></div>
+              <pre><code>& "$env:USERPROFILE\.platformio\penv\Scripts\pio.exe" test -e native -d WhisperServer</code></pre>
+            </div>
+          </div>
+        </div>
+        <div class="step">
+          <div class="step-num">7</div>
+          <div class="step-body">
+            <h3>Start mock server (UI development)</h3>
+            <p>Node.js/Express server mirroring the firmware REST API. Serves the same <code>data/</code> files at <code>http://localhost:3000</code>.</p>
+            <div class="code-block">
+              <div class="code-header"><span>bash</span><span class="material-icons">content_copy</span></div>
+              <pre><code>cd WhisperClient/test-server && npm start</code></pre>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="alert info">
+        <span class="material-icons">info</span>
+        <div class="alert-body"><strong>First-boot provisioning:</strong> On first boot with no stored credentials, the device starts AP <code>WhisperBridge-Setup</code> (password: <code>whisperbridge</code>) at <code>10.0.0.1</code>. Any HTTP request is redirected to <code>setup.html</code>. After saving credentials the device restarts in station mode and registers itself with the MQTT broker and Home Assistant automatically.</div>
+      </div>
+    </section>
+
+    <!-- ── MQTT / API ─────────────────────────────────────────────────── -->
+    <section class="section" id="api">
+      <div class="section-header">
+        <div class="section-icon amber">
+          <span class="material-icons">hub</span>
+        </div>
+        <h2>MQTT &amp; REST API</h2>
+      </div>
+
+      <h3>MQTT Topics</h3>
+      <p>All topics are constructed at runtime using the device ID — the last 3 MAC bytes in lowercase hex (e.g. <code>a1b2c3</code>). Topics are logged to serial on connect.</p>
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr><th>Topic</th><th>Direction</th><th>Payload</th><th>Notes</th></tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td>whisperbridge/&lt;id&gt;/boost</td>
+              <td>Subscribe</td>
+              <td><code>ON</code> or <code>1</code></td>
+              <td>Triggers BLE boost sequence. <code>OFF</code> is silently ignored — boost is one-shot, not a toggle.</td>
+            </tr>
+            <tr>
+              <td>whisperbridge/&lt;id&gt;/boost/state</td>
+              <td>Publish (retained)</td>
+              <td><code>ON</code> / <code>OFF</code></td>
+              <td><code>ON</code> published optimistically on command receipt; <code>OFF</code> published once the BLE task completes.</td>
+            </tr>
+            <tr>
+              <td>homeassistant/switch/whisperbridge_&lt;id&gt;_boost/config</td>
+              <td>Publish (retained)</td>
+              <td>JSON auto-discovery payload</td>
+              <td>Published on every MQTT reconnect. Registers a <code>switch</code> entity in Home Assistant with <code>mdi:fan</code> icon.</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <h3>REST API — Station Mode</h3>
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr><th>Endpoint</th><th>Method</th><th>Response</th><th>Notes</th></tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td>GET /api/status</td>
+              <td>GET</td>
+              <td><code>{"running":bool,"ble_ok":bool,"ssid":"…","ip":"…","rssi":-60}</code></td>
+              <td>Polled every 2 s by <code>index.html</code></td>
+            </tr>
+            <tr>
+              <td>POST /api/boost</td>
+              <td>POST</td>
+              <td><code>{"ok":true}</code> or 409 <code>{"error":"already running"}</code></td>
+              <td>Calls <code>Ble.trigger()</code>; returns immediately</td>
+            </tr>
+            <tr>
+              <td>POST /api/reprovision</td>
+              <td>POST</td>
+              <td><code>{"ok":true}</code></td>
+              <td>Clears NVS WiFi credentials; schedules restart into AP mode via <code>s_pendingRestart</code></td>
+            </tr>
+            <tr>
+              <td>GET /api/deviceinfo</td>
+              <td>GET</td>
+              <td><code>{"id":"a1b2c3","url":"http://whisperbridge.local"}</code></td>
+              <td>Available in both station and AP mode</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <h3>REST API — AP / Captive-Portal Mode</h3>
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr><th>Endpoint</th><th>Method</th><th>Response</th><th>Notes</th></tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td>GET /api/networkdata</td>
+              <td>GET</td>
+              <td><code>{"scanning":bool,"networks":[{"ssid","rssi","secure"}]}</code></td>
+              <td>Async scan — poll until <code>scanning:false</code>. Deduplicates by SSID, keeps strongest RSSI per network.</td>
+            </tr>
+            <tr>
+              <td>POST /api/networkset</td>
+              <td>POST</td>
+              <td><code>{"ok":true}</code></td>
+              <td>Body: <code>{"ssid":"…","password":"…"}</code>. Saves to NVS; sets <code>s_pendingRestart</code> flag.</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+    <!-- ── BLE Reference ──────────────────────────────────────────────── -->
+    <section class="section" id="ble">
+      <div class="section-header">
+        <div class="section-icon purple">
+          <span class="material-icons">bluetooth</span>
+        </div>
+        <h2>BLE / GATT Reference</h2>
+      </div>
+
+      <p>WhisperBridge acts as a GATT client. The Vent-Axia Svara fan is the peripheral (GATT server). The UUIDs and byte sequences below were determined by reverse-engineering the fan's BLE advertisement and GATT table.</p>
+
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr><th>Role</th><th>Service UUID</th><th>Characteristic UUID</th><th>Properties</th><th>Value (hex bytes)</th></tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td>Auth</td>
+              <td><code>e6834e4b-7b3a-48e6-91e4-f1d005f564d3</code></td>
+              <td><code>4cad343a-209a-40b7-b911-4d9b3df569b2</code></td>
+              <td>Write with response</td>
+              <td><code>e3 14 62 05</code></td>
+            </tr>
+            <tr>
+              <td>Boost command</td>
+              <td><code>c119e858-0531-4681-9674-5a11f0e53bb4</code></td>
+              <td><code>118c949c-28c8-4139-b0b3-36657fd055a9</code></td>
+              <td>Write with response</td>
+              <td><code>01 60 09 84 03</code></td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <div class="alert warning">
+        <span class="material-icons">warning</span>
+        <div class="alert-body"><strong>200 ms settle delay:</strong> A <code>vTaskDelay(pdMS_TO_TICKS(200))</code> is inserted between the auth write and the boost command write. The fan requires this pause to process authentication before it will accept the command characteristic write. Removing the delay causes the command write to fail silently.</div>
+      </div>
+    </section>
+
+    <!-- ── Project Structure ──────────────────────────────────────────── -->
+    <section class="section" id="structure">
+      <div class="section-header">
+        <div class="section-icon purple">
+          <span class="material-icons">folder_open</span>
+        </div>
+        <h2>Project Structure</h2>
+      </div>
+      <div class="code-block">
+        <div class="code-header"><span>tree</span><span class="material-icons">content_copy</span></div>
+        <pre><code>WhisperBridge/
+├── WhisperServer/                    # PlatformIO firmware project
+│   ├── platformio.ini                # envs: esp32dev (USB), esp32dev_ota (OTA), native (tests)
+│   ├── src/
+│   │   ├── main.cpp                  # setup/loop, WiFi STA/AP, mDNS, OTA, AsyncWebServer endpoints
+│   │   ├── ble.cpp                   # BleBoost: NimBLE GATT client, FreeRTOS task, runSequence()
+│   │   └── mqtt.cpp                  # MqttManager: PubSubClient, HA auto-discovery, subscribe/publish
+│   ├── include/
+│   │   ├── config.h                  # MQTT host, BLE MAC, UUIDs, PIN/boost bytes, GPIO pin defines
+│   │   ├── ble.h                     # BleBoost class — forward-declares NimBLE types, no headers
+│   │   ├── mqtt.h                    # MqttManager class — no PubSubClient/WiFiClient headers
+│   │   └── state.h                   # header-only parseBoostCommand(); #ifndef ARDUINO guard for native
+│   ├── data/                         # LittleFS web UI (upload separately with uploadfs)
+│   │   ├── index.html                # station UI: status card, Boost button, 2 s poll of /api/status
+│   │   └── setup.html                # captive-portal: async WiFi scan, SSID/password form
+│   └── test/
+│       └── test_mqtt.cpp             # 6 Unity test cases for parseBoostCommand — host-only
+└── WhisperClient/
+    └── test-server/                  # Node.js/Express dev mock (no hardware required)
+        └── server.js                 # mirrors all REST endpoints; serves data/ at localhost:3000</code></pre>
+      </div>
+    </section>
+
+    <!-- ── References ──────────────────────────────────────────────────── -->
+    <section class="section" id="references">
+      <div class="section-header">
+        <div class="section-icon">
+          <span class="material-icons">menu_book</span>
+        </div>
+        <h2>Documentation &amp; References</h2>
+      </div>
+      <div class="ref-grid">
+        <a class="ref-card" href="https://docs.espressif.com/projects/arduino-esp32/en/latest/" target="_blank" rel="noopener">
+          <div class="ref-icon">
+            <span class="material-icons">developer_board</span>
+          </div>
+          <div>
+            <span class="ref-title">ESP32 Arduino Core</span>
+            <span class="ref-desc">Official docs for Arduino-ESP32 — WiFi, Preferences (NVS), ArduinoOTA, ESPmDNS, and LittleFS APIs used throughout the firmware.</span>
+          </div>
+        </a>
+        <a class="ref-card" href="https://github.com/h2zero/NimBLE-Arduino" target="_blank" rel="noopener">
+          <div class="ref-icon purple">
+            <span class="material-icons">bluetooth</span>
+          </div>
+          <div>
+            <span class="ref-title">NimBLE-Arduino</span>
+            <span class="ref-desc">Lightweight BLE library for ESP32 GATT client operations. Chosen over ESP-IDF BLE for smaller RAM footprint and simpler C++ API.</span>
+          </div>
+        </a>
+        <a class="ref-card" href="https://github.com/knolleary/pubsubclient" target="_blank" rel="noopener">
+          <div class="ref-icon amber">
+            <span class="material-icons">router</span>
+          </div>
+          <div>
+            <span class="ref-title">PubSubClient</span>
+            <span class="ref-desc">MQTT client library wrapping WiFiClient. Buffer size raised to 512 bytes to fit the Home Assistant auto-discovery JSON payload.</span>
+          </div>
+        </a>
+        <a class="ref-card" href="https://arduinojson.org" target="_blank" rel="noopener">
+          <div class="ref-icon amber">
+            <span class="material-icons">data_object</span>
+          </div>
+          <div>
+            <span class="ref-title">ArduinoJson v7</span>
+            <span class="ref-desc">JSON serialisation for MQTT discovery and REST API responses, and deserialisation of WiFi credential POST bodies.</span>
+          </div>
+        </a>
+        <a class="ref-card" href="https://github.com/esphome/ESPAsyncWebServer" target="_blank" rel="noopener">
+          <div class="ref-icon">
+            <span class="material-icons">http</span>
+          </div>
+          <div>
+            <span class="ref-title">ESPAsyncWebServer</span>
+            <span class="ref-desc">Non-blocking web server (esphome fork). Serves LittleFS files and REST endpoints without stalling the WiFi stack.</span>
+          </div>
+        </a>
+        <a class="ref-card" href="https://www.home-assistant.io/integrations/switch.mqtt/" target="_blank" rel="noopener">
+          <div class="ref-icon green">
+            <span class="material-icons">home</span>
+          </div>
+          <div>
+            <span class="ref-title">HA MQTT Switch</span>
+            <span class="ref-desc">Home Assistant MQTT switch integration. WhisperBridge publishes auto-discovery on connect so the fan appears automatically as a switch entity.</span>
+          </div>
+        </a>
+        <a class="ref-card" href="https://platformio.org" target="_blank" rel="noopener">
+          <div class="ref-icon purple">
+            <span class="material-icons">build</span>
+          </div>
+          <div>
+            <span class="ref-title">PlatformIO</span>
+            <span class="ref-desc">Build system and library manager. Three environments: USB flash, OTA (espota to whisperbridge.local), and native host tests.</span>
+          </div>
+        </a>
+        <a class="ref-card" href="https://github.com/ThrowTheSwitch/Unity" target="_blank" rel="noopener">
+          <div class="ref-icon purple">
+            <span class="material-icons">science</span>
+          </div>
+          <div>
+            <span class="ref-title">Unity Test Framework</span>
+            <span class="ref-desc">C unit test framework used in the native env to test parseBoostCommand. Runs on the host with no Arduino or hardware dependency.</span>
+          </div>
+        </a>
+      </div>
+    </section>
+
+  </div><!-- /content -->
+</div><!-- /layout -->
+
+<footer>
+  <span class="material-icons">info</span>
+  WhisperBridge &mdash; ESP32 WiFi/MQTT-to-BLE bridge for Vent-Axia Svara fan &mdash; custom firmware, not affiliated with Vent-Axia
+</footer>
+
+
+<div class="lightbox-overlay" id="lightbox">
+  <button class="lightbox-close" id="lightboxClose">&times;</button>
+  <img id="lightboxImg" src="" alt="">
+</div>
+<script>
+  // Scroll spy
+  const sections = document.querySelectorAll('section[id]');
+  const navItems = document.querySelectorAll('.nav-item');
+  const obs = new IntersectionObserver(entries => {
+    entries.forEach(e => {
+      if (e.isIntersecting) {
+        navItems.forEach(n => n.classList.remove('active'));
+        const active = document.querySelector(`.nav-item[href="#${e.target.id}"]`);
+        if (active) active.classList.add('active');
+      }
+    });
+  }, { rootMargin: '-40% 0px -55% 0px' });
+  sections.forEach(s => obs.observe(s));
+
+  // Copy buttons
+  document.querySelectorAll('.code-header .material-icons').forEach(icon => {
+    icon.title = 'Copy';
+    icon.addEventListener('click', () => {
+      const code = icon.closest('.code-block').querySelector('pre').innerText;
+      navigator.clipboard.writeText(code).then(() => {
+        icon.textContent = 'check';
+        setTimeout(() => icon.textContent = 'content_copy', 1500);
+      });
+    });
+  });
+
+  // Screenshot lightbox
+  const lightbox = document.getElementById('lightbox');
+  const lightboxImg = document.getElementById('lightboxImg');
+  document.querySelectorAll('.screenshot-card img').forEach(img => {
+    img.addEventListener('click', () => {
+      lightboxImg.src = img.src;
+      lightboxImg.alt = img.alt;
+      lightbox.classList.add('open');
+    });
+  });
+  document.getElementById('lightboxClose').addEventListener('click', () => lightbox.classList.remove('open'));
+  lightbox.addEventListener('click', e => { if (e.target === lightbox) lightbox.classList.remove('open'); });
+  document.addEventListener('keydown', e => { if (e.key === 'Escape') lightbox.classList.remove('open'); });
+</script>
+</body>
+</html>
