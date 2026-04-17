@@ -1,36 +1,27 @@
 #include "mqtt.h"
 #include "config.h"
 #include "state.h"
-#include <WiFi.h>
-#include <PubSubClient.h>
 #include <ArduinoJson.h>
+#include <EspDevice.h>
 
 MqttManager Mqtt;
 
-// WiFiClient and PubSubClient kept file-scope to avoid pulling their headers into mqtt.h
-static WiFiClient   s_wifiClient;
-static PubSubClient s_mqtt(s_wifiClient);
+void MqttManager::setup(const char* deviceId) {
+    _topicCommand   = String("whisperbridge/") + deviceId + "/boost";
+    _topicState     = String("whisperbridge/") + deviceId + "/boost/state";
+    _topicDiscovery = String("homeassistant/switch/whisperbridge_") + deviceId + "_boost/config";
 
-// ── Private methods ───────────────────────────────────────────────────────────
-
-void MqttManager::onMessage(const char* topic, uint8_t* payload, unsigned int length) {
-    char msg[64] = {};
-    memcpy(msg, payload, min((size_t)length, sizeof(msg) - 1));
-    Serial.printf("[MQTT] %s → %s\n", topic, msg);
-
-    if (strcmp(topic, Mqtt._topicCommand.c_str()) == 0) {
-        if (parseBoostCommand(msg)) {
-            Mqtt.publishState(true);  // optimistic ON
-            if (Mqtt._commandCallback) Mqtt._commandCallback();
-            // loop() will publish OFF once the BLE task completes
-        }
-        // Ignore "OFF" — boost is a one-shot action, not a toggle
-    }
+    EspMqttBase::Config cfg;
+    cfg.host     = MQTT_HOST;
+    cfg.port     = MQTT_PORT;
+    cfg.user     = MQTT_USER;
+    cfg.password = MQTT_PASSWORD;
+    EspMqttBase::setup(cfg);
 }
 
 void MqttManager::publishDiscovery() {
     JsonDocument doc;
-    String entityId      = String("whisperbridge_") + _deviceId;
+    String entityId      = String("whisperbridge_") + EspDevice::id();
     doc["name"]          = "Boost";
     doc["unique_id"]     = entityId + "_boost";
     doc["command_topic"] = _topicCommand;
@@ -49,57 +40,22 @@ void MqttManager::publishDiscovery() {
 
     char buf[512];
     serializeJson(doc, buf, sizeof(buf));
-    if (!s_mqtt.publish(_topicDiscovery.c_str(), buf, /*retain=*/true)) {
-        Serial.println("[MQTT] Discovery publish failed");
-    } else {
-        Serial.println("[MQTT] HA discovery published");
-    }
+    publish(_topicDiscovery.c_str(), buf, /*retain=*/true);
 }
 
-void MqttManager::connect() {
-    String clientId = String("whisperbridge-") + _deviceId;
-    bool ok = (strlen(MQTT_USER) > 0)
-        ? s_mqtt.connect(clientId.c_str(), MQTT_USER, MQTT_PASSWORD)
-        : s_mqtt.connect(clientId.c_str());
-
-    if (ok) {
-        Serial.println("[MQTT] Connected");
-        s_mqtt.subscribe(_topicCommand.c_str());
-        publishDiscovery();
-        publishState(false);
-    } else {
-        Serial.printf("[MQTT] Connect failed, rc=%d\n", s_mqtt.state());
-    }
+void MqttManager::onConnected() {
+    subscribe(_topicCommand.c_str());
+    publishDiscovery();
+    publishState(false);
 }
 
-// ── Public API ────────────────────────────────────────────────────────────────
-
-void MqttManager::setup(const char* deviceId) {
-    strncpy(_deviceId, deviceId, sizeof(_deviceId) - 1);
-    _topicCommand   = String("whisperbridge/") + _deviceId + "/boost";
-    _topicState     = String("whisperbridge/") + _deviceId + "/boost/state";
-    _topicDiscovery = String("homeassistant/switch/whisperbridge_") + _deviceId + "_boost/config";
-    s_mqtt.setServer(MQTT_HOST, MQTT_PORT);
-    s_mqtt.setCallback(onMessage);
-    s_mqtt.setBufferSize(512);
-}
-
-void MqttManager::loop() {
-    if (!s_mqtt.connected()) {
-        unsigned long now = millis();
-        if (now - _lastReconnect >= 5000) {
-            _lastReconnect = now;
-            connect();
-        }
-    } else {
-        s_mqtt.loop();
-    }
+void MqttManager::onMessage(const char* topic, const char* payload) {
+    if (strcmp(topic, _topicCommand.c_str()) != 0) return;
+    if (!parseBoostCommand(payload)) return;
+    publishState(true);
+    if (_commandCallback) _commandCallback();
 }
 
 void MqttManager::publishState(bool on) {
-    s_mqtt.publish(_topicState.c_str(), on ? MQTT_PAYLOAD_ON : MQTT_PAYLOAD_OFF, /*retain=*/true);
-}
-
-void MqttManager::setCommandCallback(CommandCallback cb) {
-    _commandCallback = cb;
+    publish(_topicState.c_str(), on ? MQTT_PAYLOAD_ON : MQTT_PAYLOAD_OFF, /*retain=*/true);
 }

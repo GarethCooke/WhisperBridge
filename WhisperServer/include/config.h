@@ -2,8 +2,6 @@
 #include <stdint.h>
 
 // ── WiFi ─────────────────────────────────────────────────────────────────────
-#define WIFI_HOSTNAME    "whisperbridge"
-#define WIFI_AP_SSID     "WhisperBridge-Setup"
 #define WIFI_AP_PASSWORD "whisperbridge"  // min 8 chars for WPA2
 
 // ── MQTT ─────────────────────────────────────────────────────────────────────

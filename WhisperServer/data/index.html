@@ -27,6 +27,9 @@
     margin-top: 0.5rem; letter-spacing: 0;
   }
   .btn-secondary:not(:disabled):hover { background: #1e1e1e; color: #ccc; }
+  a.btn-secondary {
+    display: block; text-align: center; text-decoration: none; border-radius: 12px;
+  }
 </style>
 </head>
 <body>
@@ -43,7 +46,7 @@
 
 <button type="button" id="btn" onclick="triggerBoost()">Boost</button>
 <div id="msg"></div>
-<button type="button" class="btn-secondary" onclick="reprovision()">Change network</button>
+<a href="setup.html" class="btn-secondary">Change network</a>
 
 <script>
 function setMsg(txt, colour) {

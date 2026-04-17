@@ -3,12 +3,17 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>WhisperBridge Setup</title>
-<link rel="stylesheet" href="/style.css">
+<title>Device Setup</title>
 <style>
-  .card-title { font-size: 0.75rem; color: #888; text-transform: uppercase; letter-spacing: 0.08em; margin-bottom: 0.75rem; }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: sans-serif; background: #111; color: #eee; display: flex; flex-direction: column; align-items: center; padding: 2rem 1rem; min-height: 100vh; }
+  h1 { font-size: 1.4rem; margin-bottom: 0.25rem; letter-spacing: 0.05em; }
+  .sub { font-size: 0.8rem; color: #888; margin-bottom: 2rem; }
+  .card { background: #1e1e1e; border-radius: 12px; padding: 1.5rem; width: 100%; max-width: 360px; margin-bottom: 1rem; }
+  button:disabled { background: #333; color: #555; cursor: not-allowed; }
+  #msg { font-size: 0.85rem; color: #888; min-height: 1.2em; text-align: center; }
 
-  /* Network list */
+  .card-title { font-size: 0.75rem; color: #888; text-transform: uppercase; letter-spacing: 0.08em; margin-bottom: 0.75rem; }
   .net-list { display: flex; flex-direction: column; gap: 0.4rem; min-height: 2rem; }
   .net-item {
     display: flex; align-items: center; justify-content: space-between;
@@ -19,10 +24,8 @@
   .net-item.selected { border-color: #2979ff; }
   .net-name { font-size: 0.9rem; font-weight: 600; }
   .net-meta { display: flex; align-items: center; gap: 0.4rem; font-size: 0.75rem; color: #888; }
-  .net-lock { color: #aaa; }
   .scanning { font-size: 0.85rem; color: #888; padding: 0.4rem 0; }
 
-  /* Form */
   label { display: block; font-size: 0.8rem; color: #888; margin-bottom: 0.3rem; margin-top: 1rem; }
   label:first-of-type { margin-top: 0; }
   input {
@@ -31,7 +34,6 @@
   }
   input:focus { border-color: #2979ff; }
 
-  /* Buttons */
   .btn-row { display: flex; gap: 0.5rem; margin-top: 1.5rem; }
   button {
     flex: 1; padding: 0.9rem; background: #2979ff; color: #fff; border: none;
@@ -43,16 +45,13 @@
   button:not(:disabled):not(.secondary):hover { background: #1565c0; }
   button.secondary:not(:disabled):hover { background: #333; color: #eee; }
 
-  /* URL preview */
   .url-card { background: #1e1e1e; border-radius: 12px; padding: 1rem 1.5rem; width: 100%; max-width: 360px; margin-bottom: 1rem; }
   .url-label { font-size: 0.75rem; color: #888; margin-bottom: 0.25rem; }
   .url-link { font-size: 0.9rem; color: #2979ff; word-break: break-all; }
-
-  #msg { margin-top: 0.75rem; width: 100%; max-width: 360px; }
 </style>
 </head>
 <body>
-<h1>WhisperBridge</h1>
+<h1 id="title">Setting up&hellip;</h1>
 <p class="sub">WiFi Setup</p>
 
 <div class="url-card" id="url-card" hidden>
@@ -61,8 +60,8 @@
 </div>
 
 <div class="card">
-  <div class="card-title">Available Networks <span id="rescan-wrap">· <button type="button" class="secondary rescan" id="rescan" onclick="startScan()">Rescan</button></span></div>
-  <div class="net-list" id="net-list"><p class="scanning">Scanning…</p></div>
+  <div class="card-title">Available Networks <span>&middot; <button type="button" class="secondary rescan" id="rescan" onclick="startScan()">Rescan</button></span></div>
+  <div class="net-list" id="net-list"><p class="scanning">Scanning&hellip;</p></div>
 </div>
 
 <div class="card">
@@ -79,39 +78,39 @@
 <script>
 var selectedSsid = null;
 
-// ── HTML escaping (prevents XSS from malicious AP SSIDs) ──────────────────────
 function escHtml(s) {
-  return s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+  return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
 }
 
-// ── Device info preview ───────────────────────────────────────────────────────
 fetch('/api/deviceinfo').then(function(r) { return r.json(); }).then(function(info) {
+  var n = info.name || 'Device';
+  document.getElementById('title').textContent = n;
+  document.title = n + ' \u2014 WiFi Setup';
   var link = document.getElementById('url-link');
   link.href = info.url;
   link.textContent = info.url;
   document.getElementById('url-card').hidden = false;
-}).catch(function() {});
+}).catch(function() {
+  document.getElementById('title').textContent = 'Device';
+});
 
-// ── SSID input enables Connect button ────────────────────────────────────────
 document.getElementById('ssid').addEventListener('input', function() {
   document.getElementById('btn').disabled = this.value.trim().length === 0;
 });
 
-// ── Signal strength → bar label ───────────────────────────────────────────────
 function signalLabel(rssi) {
-  if (rssi >= -60) return '▂▄▆█';
-  if (rssi >= -70) return '▂▄▆·';
-  if (rssi >= -80) return '▂▄··';
-  return '▂···';
+  if (rssi >= -60) return '\u2582\u2584\u2586\u2588';
+  if (rssi >= -70) return '\u2582\u2584\u2586\u00b7';
+  if (rssi >= -80) return '\u2582\u2584\u00b7\u00b7';
+  return '\u2582\u00b7\u00b7\u00b7';
 }
 
-// ── Network list ──────────────────────────────────────────────────────────────
 function networkItemHtml(n) {
   return '<div class="net-item" data-ssid="' + escHtml(n.ssid) + '" onclick="selectNetwork(this.dataset.ssid)">' +
     '<span class="net-name">' + escHtml(n.ssid) + '</span>' +
     '<span class="net-meta">' +
       '<span style="font-family:monospace">' + signalLabel(n.rssi) + '</span>' +
-      (n.secure ? '<span class="net-lock">🔒</span>' : '') +
+      (n.secure ? '<span>\uD83D\uDD12</span>' : '') +
     '</span>' +
   '</div>';
 }
@@ -129,7 +128,7 @@ function selectNetwork(ssid) {
 function renderNetworks(networks) {
   var list = document.getElementById('net-list');
   if (!networks.length) {
-    list.innerHTML = '<p class="scanning">No networks found — try rescanning.</p>';
+    list.innerHTML = '<p class="scanning">No networks found &mdash; try rescanning.</p>';
     return;
   }
   list.innerHTML = networks.map(networkItemHtml).join('');
@@ -141,7 +140,7 @@ function renderNetworks(networks) {
 }
 
 function startScan() {
-  document.getElementById('net-list').innerHTML = '<p class="scanning">Scanning…</p>';
+  document.getElementById('net-list').innerHTML = '<p class="scanning">Scanning&hellip;</p>';
   document.getElementById('rescan').disabled = true;
   pollNetworks(0);
 }
@@ -149,7 +148,7 @@ function startScan() {
 function pollNetworks(retries) {
   if (retries > 15) {
     document.getElementById('rescan').disabled = false;
-    document.getElementById('net-list').innerHTML = '<p class="scanning">Scan timed out — try rescanning.</p>';
+    document.getElementById('net-list').innerHTML = '<p class="scanning">Scan timed out &mdash; try rescanning.</p>';
     return;
   }
   fetch('/api/networkdata').then(function(r) { return r.json(); }).then(function(data) {
@@ -158,14 +157,13 @@ function pollNetworks(retries) {
       return;
     }
     document.getElementById('rescan').disabled = false;
-    renderNetworks(data.networks);
+    renderNetworks(data.networks || []);
   }).catch(function() {
     document.getElementById('rescan').disabled = false;
     document.getElementById('net-list').innerHTML = '<p class="scanning">Scan failed.</p>';
   });
 }
 
-// ── Connect ───────────────────────────────────────────────────────────────────
 function save() {
   var ssid = document.getElementById('ssid').value.trim();
   if (!ssid) return;
@@ -173,7 +171,7 @@ function save() {
   var msg = document.getElementById('msg');
   btn.disabled = true;
   msg.style.color = '#888';
-  msg.textContent = 'Saving…';
+  msg.textContent = 'Saving\u2026';
   fetch('/api/networkset', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
@@ -181,7 +179,7 @@ function save() {
   }).then(function(r) {
     if (r.ok) {
       msg.style.color = '#4caf50';
-      msg.textContent = 'Saved — device is restarting. Reconnect to your network.';
+      msg.textContent = 'Saved \u2014 device is restarting. Reconnect to your network.';
     } else { throw new Error('HTTP ' + r.status); }
   }).catch(function(e) {
     msg.style.color = '#f44336';
@@ -191,8 +189,6 @@ function save() {
 }
 
 document.addEventListener('keydown', function(e) { if (e.key === 'Enter') save(); });
-
-// Start scan on load
 startScan();
 </script>
 </body>
