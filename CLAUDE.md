@@ -18,7 +18,7 @@ WhisperBridge is an ESP32 firmware that acts as a WiFi/MQTT-to-BLE bridge for a 
 |---|---|
 | Build | `pio run -e esp32dev -d WhisperServer` |
 | Flash (USB) | `pio run -e esp32dev -t upload -d WhisperServer` |
-| Flash (OTA) | `pio run -e esp32dev_ota -t upload -d WhisperServer` |
+| Flash (OTA) | `pio run -e esp32dev_ota -t upload -d WhisperServer` (targets `whisperbridge-<id>.local`) |
 | Upload web UI (LittleFS) | `pio run -e esp32dev -t uploadfs -d WhisperServer` |
 | Run native tests | `pio test -e native -d WhisperServer` |
 | Serial monitor | `pio device monitor -d WhisperServer` |

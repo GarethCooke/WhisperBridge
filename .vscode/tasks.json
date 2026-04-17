@@ -34,6 +34,14 @@
             "problemMatcher": []
         },
         {
+            "label": "Upload Filesystem (OTA)",
+            "type": "shell",
+            "command": "& \"$env:USERPROFILE\\.platformio\\penv\\Scripts\\pio.exe\" run -e esp32dev_ota -t uploadfs -d WhisperServer",
+            "group": "build",
+            "presentation": { "panel": "shared", "reveal": "always" },
+            "problemMatcher": []
+        },
+        {
             "label": "Test (native)",
             "type": "shell",
             "command": "& \"$env:USERPROFILE\\.platformio\\penv\\Scripts\\pio.exe\" test -e native -d WhisperServer",
@@ -47,6 +55,28 @@
             "command": "& \"$env:USERPROFILE\\.platformio\\penv\\Scripts\\pio.exe\" device monitor -d WhisperServer",
             "group": "none",
             "presentation": { "panel": "dedicated", "reveal": "always" },
+            "problemMatcher": []
+        },
+        {
+            "label": "Upload All (USB)",
+            "dependsOn": [
+                "Upload (USB)",
+                "Upload Filesystem (LittleFS)"
+            ],
+            "dependsOrder": "sequence",
+            "group": "build",
+            "presentation": { "panel": "shared", "reveal": "always" },
+            "problemMatcher": []
+        },
+        {
+            "label": "Upload All (OTA)",
+            "dependsOn": [
+                "Upload (OTA)",
+                "Upload Filesystem (OTA)"
+            ],
+            "dependsOrder": "sequence",
+            "group": "build",
+            "presentation": { "panel": "shared", "reveal": "always" },
             "problemMatcher": []
         },
         {

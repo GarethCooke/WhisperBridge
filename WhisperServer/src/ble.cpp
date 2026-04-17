@@ -67,9 +67,16 @@ bool BleBoost::runSequence() {
 void BleBoost::runTask() {
     for (;;) {
         ulTaskNotifyTake(pdTRUE, portMAX_DELAY);
-        _running     = true;
-        _lastSuccess = runSequence();
-        _running     = false;
+        _running = true;
+        _lastSuccess = false;
+        for (int attempt = 1; attempt <= 3 && !_lastSuccess; attempt++) {
+            if (attempt > 1) {
+                Serial.printf("[BLE] Retry %d/3...\n", attempt);
+                vTaskDelay(pdMS_TO_TICKS(1000));
+            }
+            _lastSuccess = runSequence();
+        }
+        _running = false;
         Serial.printf("[BLE] Sequence %s\n", _lastSuccess ? "succeeded" : "FAILED");
     }
 }

@@ -42,6 +42,7 @@
   <div class="row"><span class="label">RSSI</span><span class="value" id="rssi">—</span></div>
   <div class="row"><span class="label">Status</span><span class="value" id="status">—</span></div>
   <div class="row"><span class="label">Last BLE</span><span class="value" id="ble_ok">—</span></div>
+  <div class="row"><span class="label">Built</span><span class="value idle" id="built">—</span></div>
 </div>
 
 <button type="button" id="btn" onclick="triggerBoost()">Boost</button>
@@ -115,7 +116,18 @@ async function reprovision() {
   }
 }
 
+async function loadDeviceInfo() {
+  try {
+    const res = await fetch('/api/deviceinfo');
+    if (res.ok) {
+      const d = await res.json();
+      if (d.built) document.getElementById('built').textContent = d.built;
+    }
+  } catch (_) {}
+}
+
 poll();
+loadDeviceInfo();
 setInterval(poll, 2000);
 </script>
 </body>

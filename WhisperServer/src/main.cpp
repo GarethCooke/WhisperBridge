@@ -82,9 +82,11 @@ void setup() {
     });
 
     EspProvisionConfig cfg;
-    cfg.apPassword   = WIFI_AP_PASSWORD;
-    cfg.nvsNamespace = "whisper";
-    cfg.otaPassword  = OTA_PASSWORD;
+    cfg.apPassword       = WIFI_AP_PASSWORD;
+    cfg.nvsNamespace     = "whisper";
+    cfg.otaPassword      = OTA_PASSWORD;
+    cfg.friendlyHostname = "whisperbridge";
+    cfg.serviceType      = nullptr;
     Provision.begin("whisperbridge", "WhisperBridge", cfg);
 }
 

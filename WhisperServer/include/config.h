@@ -16,8 +16,7 @@ constexpr uint16_t MQTT_PORT = 1883;
 #define MQTT_PAYLOAD_OFF "OFF"
 
 // ── BLE – Vent-Axia Svara ────────────────────────────────────────────────────
-// TODO: replace with actual fan MAC address
-#define FAN_MAC_ADDRESS "AA:BB:CC:DD:EE:FF"
+#define FAN_MAC_ADDRESS "58:2B:DB:34:D3:AE"
 
 // Service containing the PIN/auth characteristic
 #define BLE_AUTH_SERVICE_UUID "e6834e4b-7b3a-48e6-91e4-f1d005f564d3"
