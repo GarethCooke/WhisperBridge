@@ -7,7 +7,7 @@ public:
     using CommandCallback = std::function<void()>;
 
     // Build topics from deviceId and configure the MQTT client.
-    void setup(const char* deviceId);
+    void setup(const char* deviceId, const char* mqttUser = "", const char* mqttPass = "");
 
     // Publish ON or OFF to the state topic.
     void publishState(bool on);

@@ -78,7 +78,9 @@ void setup() {
         srv.serveStatic("/", LittleFS, "/").setDefaultFile("index.html");
 
         Mqtt.setCommandCallback([]() { Ble.trigger(); });
-        Mqtt.setup(EspDevice::id().c_str());
+        String mqttUser = Provision.getMqttUser();
+        String mqttPass = Provision.getMqttPass();
+        Mqtt.setup(EspDevice::id().c_str(), mqttUser.c_str(), mqttPass.c_str());
     });
 
     EspProvisionConfig cfg;

@@ -5,11 +5,9 @@
 #define WIFI_AP_PASSWORD "whisperbridge"  // min 8 chars for WPA2
 
 // ── MQTT ─────────────────────────────────────────────────────────────────────
-// Edit before flashing
+// Edit broker IP before flashing. User/password are set at runtime via /settings.html.
 #define MQTT_HOST     "192.168.1.x"   // TODO: set broker IP
 constexpr uint16_t MQTT_PORT = 1883;
-#define MQTT_USER     ""
-#define MQTT_PASSWORD ""
 
 // Payloads
 #define MQTT_PAYLOAD_ON  "ON"
@@ -40,4 +38,5 @@ constexpr uint8_t BLE_BOOST_BYTES[] = { 0x01, 0x60, 0x09, 0x84, 0x03 };
 // #define RESET_BUTTON_PIN 0
 
 // ── OTA ──────────────────────────────────────────────────────────────────────
-#define OTA_PASSWORD "password"  // TODO: change before production
+// Default used on first boot; override at runtime via /settings.html.
+#define OTA_PASSWORD "password"

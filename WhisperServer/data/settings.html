@@ -1,0 +1,135 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Device Settings</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: sans-serif; background: #111; color: #eee; display: flex; flex-direction: column; align-items: center; padding: 2rem 1rem; min-height: 100vh; }
+  h1 { font-size: 1.4rem; margin-bottom: 0.25rem; letter-spacing: 0.05em; }
+  .sub { font-size: 0.8rem; color: #888; margin-bottom: 2rem; }
+  .card { background: #1e1e1e; border-radius: 12px; padding: 1.5rem; width: 100%; max-width: 360px; margin-bottom: 1rem; }
+  .card-title { font-size: 0.75rem; color: #888; text-transform: uppercase; letter-spacing: 0.08em; margin-bottom: 0.75rem; }
+  label { display: block; font-size: 0.8rem; color: #888; margin-bottom: 0.3rem; margin-top: 1rem; }
+  label:first-of-type { margin-top: 0; }
+  input {
+    width: 100%; padding: 0.75rem 1rem; background: #2a2a2a; border: 1px solid #333;
+    border-radius: 8px; color: #eee; font-size: 1rem; outline: none;
+  }
+  input:focus { border-color: #2979ff; }
+  .pass-wrap { position: relative; }
+  .pass-wrap input { padding-right: 3rem; }
+  .eye {
+    position: absolute; right: 0.75rem; top: 50%; transform: translateY(-50%);
+    background: none; border: none; color: #888; cursor: pointer; font-size: 1rem;
+    padding: 0; flex: none;
+  }
+  .eye:hover { color: #eee; }
+  .set-badge { font-size: 0.7rem; color: #4caf50; margin-left: 0.4rem; }
+  .btn-row { display: flex; gap: 0.5rem; margin-top: 1.5rem; }
+  button {
+    flex: 1; padding: 0.9rem; background: #2979ff; color: #fff; border: none;
+    border-radius: 10px; font-size: 1rem; font-weight: 700; cursor: pointer;
+    letter-spacing: 0.05em; transition: background 0.15s;
+  }
+  button:disabled { background: #333; color: #555; cursor: not-allowed; }
+  button:not(:disabled):hover { background: #1565c0; }
+  .msg { font-size: 0.85rem; color: #888; min-height: 1.2em; margin-top: 0.5rem; text-align: center; }
+  .back { font-size: 0.85rem; color: #2979ff; text-decoration: none; margin-top: 1rem; }
+  .back:hover { text-decoration: underline; }
+</style>
+</head>
+<body>
+<h1 id="title">Settings</h1>
+<p class="sub">Device credentials</p>
+
+<div class="card">
+  <div class="card-title">MQTT <span id="mqtt-badge" class="set-badge" hidden>&#10003; password saved</span></div>
+  <label for="mqtt-user">Username</label>
+  <input id="mqtt-user" type="text" placeholder="leave empty if not required" autocomplete="off" autocorrect="off" spellcheck="false">
+  <label for="mqtt-pass">Password</label>
+  <div class="pass-wrap">
+    <input id="mqtt-pass" type="password" placeholder="leave empty to clear" autocomplete="new-password">
+    <button type="button" class="eye" onclick="toggleVis('mqtt-pass',this)" title="Show/hide">&#128065;</button>
+  </div>
+  <div class="btn-row">
+    <button type="button" onclick="saveMqtt()">Save MQTT</button>
+  </div>
+  <div class="msg" id="mqtt-msg"></div>
+</div>
+
+<div class="card">
+  <div class="card-title">OTA Update <span id="ota-badge" class="set-badge" hidden>&#10003; password saved</span></div>
+  <label for="ota-pass">Password</label>
+  <div class="pass-wrap">
+    <input id="ota-pass" type="password" placeholder="leave empty to use firmware default" autocomplete="new-password">
+    <button type="button" class="eye" onclick="toggleVis('ota-pass',this)" title="Show/hide">&#128065;</button>
+  </div>
+  <div class="btn-row">
+    <button type="button" onclick="saveOta()">Save OTA</button>
+  </div>
+  <div class="msg" id="ota-msg"></div>
+</div>
+
+<a class="back" href="/">&#8592; Back</a>
+
+<script>
+function toggleVis(id, btn) {
+  var el = document.getElementById(id);
+  el.type = el.type === 'password' ? 'text' : 'password';
+}
+
+fetch('/api/deviceinfo').then(function(r) { return r.json(); }).then(function(info) {
+  document.getElementById('title').textContent = info.name || 'Device';
+  document.title = (info.name || 'Device') + ' \u2014 Settings';
+}).catch(function() {});
+
+fetch('/api/settings').then(function(r) { return r.json(); }).then(function(s) {
+  document.getElementById('mqtt-user').value = s.mqtt_user || '';
+  if (s.mqtt_pass_set) document.getElementById('mqtt-badge').hidden = false;
+  if (s.ota_pass_set)  document.getElementById('ota-badge').hidden  = false;
+}).catch(function() {});
+
+function post(body, msgId, successText) {
+  var msg = document.getElementById(msgId);
+  msg.style.color = '#888';
+  msg.textContent = 'Saving\u2026';
+  fetch('/api/settings', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(body)
+  }).then(function(r) {
+    if (r.ok) {
+      msg.style.color = '#4caf50';
+      msg.textContent = successText;
+    } else { throw new Error('HTTP ' + r.status); }
+  }).catch(function(e) {
+    msg.style.color = '#f44336';
+    msg.textContent = 'Error: ' + e.message;
+  });
+}
+
+function saveMqtt() {
+  post(
+    { mqtt_user: document.getElementById('mqtt-user').value,
+      mqtt_pass: document.getElementById('mqtt-pass').value },
+    'mqtt-msg',
+    'Saved \u2014 restart device to apply.'
+  );
+  var passSet = document.getElementById('mqtt-pass').value.length > 0;
+  document.getElementById('mqtt-badge').hidden = !passSet;
+}
+
+function saveOta() {
+  post(
+    { ota_pass: document.getElementById('ota-pass').value },
+    'ota-msg',
+    'Saved \u2014 restart device to apply.'
+  );
+  var passSet = document.getElementById('ota-pass').value.length > 0;
+  document.getElementById('ota-badge').hidden = !passSet;
+}
+</script>
+</body>
+</html>

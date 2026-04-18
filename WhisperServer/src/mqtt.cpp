@@ -6,7 +6,7 @@
 
 MqttManager Mqtt;
 
-void MqttManager::setup(const char* deviceId) {
+void MqttManager::setup(const char* deviceId, const char* mqttUser, const char* mqttPass) {
     _topicCommand   = String("whisperbridge/") + deviceId + "/boost";
     _topicState     = String("whisperbridge/") + deviceId + "/boost/state";
     _topicDiscovery = String("homeassistant/switch/whisperbridge_") + deviceId + "_boost/config";
@@ -14,8 +14,8 @@ void MqttManager::setup(const char* deviceId) {
     EspMqttBase::Config cfg;
     cfg.host     = MQTT_HOST;
     cfg.port     = MQTT_PORT;
-    cfg.user     = MQTT_USER;
-    cfg.password = MQTT_PASSWORD;
+    cfg.user     = mqttUser;
+    cfg.password = mqttPass;
     EspMqttBase::setup(cfg);
 }
 
