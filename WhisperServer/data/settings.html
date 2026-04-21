@@ -4,40 +4,22 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Device Settings</title>
+<link rel="stylesheet" href="/style.css">
 <style>
-  * { box-sizing: border-box; margin: 0; padding: 0; }
-  body { font-family: sans-serif; background: #111; color: #eee; display: flex; flex-direction: column; align-items: center; padding: 2rem 1rem; min-height: 100vh; }
-  h1 { font-size: 1.4rem; margin-bottom: 0.25rem; letter-spacing: 0.05em; }
-  .sub { font-size: 0.8rem; color: #888; margin-bottom: 2rem; }
-  .card { background: #1e1e1e; border-radius: 12px; padding: 1.5rem; width: 100%; max-width: 360px; margin-bottom: 1rem; }
-  .card-title { font-size: 0.75rem; color: #888; text-transform: uppercase; letter-spacing: 0.08em; margin-bottom: 0.75rem; }
-  label { display: block; font-size: 0.8rem; color: #888; margin-bottom: 0.3rem; margin-top: 1rem; }
-  label:first-of-type { margin-top: 0; }
-  input {
-    width: 100%; padding: 0.75rem 1rem; background: #2a2a2a; border: 1px solid #333;
-    border-radius: 8px; color: #eee; font-size: 1rem; outline: none;
-  }
-  input:focus { border-color: #2979ff; }
+  .card-title { font-size: 0.75rem; color: var(--muted); text-transform: uppercase; letter-spacing: 0.08em; margin-bottom: 0.75rem; }
   .pass-wrap { position: relative; }
   .pass-wrap input { padding-right: 3rem; }
   .eye {
     position: absolute; right: 0.75rem; top: 50%; transform: translateY(-50%);
-    background: none; border: none; color: #888; cursor: pointer; font-size: 1rem;
-    padding: 0; flex: none;
+    background: none; border: none; color: var(--muted); cursor: pointer; font-size: 1rem; padding: 0; flex: none;
   }
-  .eye:hover { color: #eee; }
-  .set-badge { font-size: 0.7rem; color: #4caf50; margin-left: 0.4rem; }
+  .eye:hover { color: var(--text); }
+  .set-badge { font-size: 0.7rem; color: var(--ok); margin-left: 0.4rem; }
   .btn-row { display: flex; gap: 0.5rem; margin-top: 1.5rem; }
-  button {
-    flex: 1; padding: 0.9rem; background: #2979ff; color: #fff; border: none;
-    border-radius: 10px; font-size: 1rem; font-weight: 700; cursor: pointer;
-    letter-spacing: 0.05em; transition: background 0.15s;
-  }
-  button:disabled { background: #333; color: #555; cursor: not-allowed; }
-  button:not(:disabled):hover { background: #1565c0; }
-  .msg { font-size: 0.85rem; color: #888; min-height: 1.2em; margin-top: 0.5rem; text-align: center; }
-  .back { font-size: 0.85rem; color: #2979ff; text-decoration: none; margin-top: 1rem; }
-  .back:hover { text-decoration: underline; }
+  .btn-row button { flex: 1; padding: 0.9rem; width: auto; }
+  .field-row { display: flex; gap: 0.75rem; }
+  .field-row > div { flex: 1; }
+  .field-row > div.narrow { flex: 0 0 6rem; }
 </style>
 </head>
 <body>
@@ -46,6 +28,16 @@
 
 <div class="card">
   <div class="card-title">MQTT <span id="mqtt-badge" class="set-badge" hidden>&#10003; password saved</span></div>
+  <div class="field-row">
+    <div>
+      <label for="mqtt-host">Broker host</label>
+      <input id="mqtt-host" type="text" placeholder="192.168.1.x" autocomplete="off" autocorrect="off" spellcheck="false">
+    </div>
+    <div class="narrow">
+      <label for="mqtt-port">Port</label>
+      <input id="mqtt-port" type="number" min="1" max="65535" placeholder="1883" autocomplete="off">
+    </div>
+  </div>
   <label for="mqtt-user">Username</label>
   <input id="mqtt-user" type="text" placeholder="leave empty if not required" autocomplete="off" autocorrect="off" spellcheck="false">
   <label for="mqtt-pass">Password</label>
@@ -57,6 +49,16 @@
     <button type="button" onclick="saveMqtt()">Save MQTT</button>
   </div>
   <div class="msg" id="mqtt-msg"></div>
+</div>
+
+<div class="card">
+  <div class="card-title">Fan</div>
+  <label for="fan-mac">Bluetooth MAC address</label>
+  <input id="fan-mac" type="text" placeholder="AA:BB:CC:DD:EE:FF" autocomplete="off" autocorrect="off" spellcheck="false">
+  <div class="btn-row">
+    <button type="button" onclick="saveFan()">Save Fan</button>
+  </div>
+  <div class="msg" id="fan-msg"></div>
 </div>
 
 <div class="card">
@@ -86,24 +88,34 @@ fetch('/api/deviceinfo').then(function(r) { return r.json(); }).then(function(in
 }).catch(function() {});
 
 fetch('/api/settings').then(function(r) { return r.json(); }).then(function(s) {
+  document.getElementById('mqtt-host').value = s.mqtt_host || '';
+  document.getElementById('mqtt-port').value = s.mqtt_port || '';
   document.getElementById('mqtt-user').value = s.mqtt_user || '';
-  if (s.mqtt_pass_set) document.getElementById('mqtt-badge').hidden = false;
+  document.getElementById('mqtt-pass').value = s.mqtt_pass || '';
+  document.getElementById('fan-mac').value   = s.fan_mac   || '';
+  if (s.mqtt_pass) document.getElementById('mqtt-badge').hidden = false;
   if (s.ota_pass_set)  document.getElementById('ota-badge').hidden  = false;
 }).catch(function() {});
 
 function post(body, msgId, successText) {
   var msg = document.getElementById(msgId);
-  msg.style.color = '#888';
+  msg.style.color = '#7a8aaa';
   msg.textContent = 'Saving\u2026';
   fetch('/api/settings', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify(body)
   }).then(function(r) {
-    if (r.ok) {
-      msg.style.color = '#4caf50';
+    if (!r.ok) throw new Error('HTTP ' + r.status);
+    return r.json();
+  }).then(function(data) {
+    msg.style.color = '#4caf50';
+    if (data.restart) {
+      msg.textContent = 'Saved \u2014 restarting\u2026';
+      setTimeout(function() { location.reload(); }, 6000);
+    } else {
       msg.textContent = successText;
-    } else { throw new Error('HTTP ' + r.status); }
+    }
   }).catch(function(e) {
     msg.style.color = '#f44336';
     msg.textContent = 'Error: ' + e.message;
@@ -111,14 +123,25 @@ function post(body, msgId, successText) {
 }
 
 function saveMqtt() {
+  var hostEl = document.getElementById('mqtt-host');
+  hostEl.value = hostEl.value.trim().replace(/^https?:\/\//i, '').replace(/\/+$/, '');
+  var portVal = document.getElementById('mqtt-port').value;
+  var body = {
+    mqtt_host: hostEl.value,
+    mqtt_user: document.getElementById('mqtt-user').value,
+    mqtt_pass: document.getElementById('mqtt-pass').value
+  };
+  if (portVal) body.mqtt_port = parseInt(portVal, 10);
+  post(body, 'mqtt-msg', 'Saved \u2014 restart device to apply.');
+  document.getElementById('mqtt-badge').hidden = document.getElementById('mqtt-pass').value.length === 0;
+}
+
+function saveFan() {
   post(
-    { mqtt_user: document.getElementById('mqtt-user').value,
-      mqtt_pass: document.getElementById('mqtt-pass').value },
-    'mqtt-msg',
-    'Saved \u2014 restart device to apply.'
+    { fan_mac: document.getElementById('fan-mac').value },
+    'fan-msg',
+    'Saved \u2014 takes effect on next boost.'
   );
-  var passSet = document.getElementById('mqtt-pass').value.length > 0;
-  document.getElementById('mqtt-badge').hidden = !passSet;
 }
 
 function saveOta() {
@@ -127,8 +150,7 @@ function saveOta() {
     'ota-msg',
     'Saved \u2014 restart device to apply.'
   );
-  var passSet = document.getElementById('ota-pass').value.length > 0;
-  document.getElementById('ota-badge').hidden = !passSet;
+  document.getElementById('ota-badge').hidden = document.getElementById('ota-pass').value.length === 0;
 }
 </script>
 </body>

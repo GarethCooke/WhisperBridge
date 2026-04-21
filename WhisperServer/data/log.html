@@ -1,0 +1,207 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Logs</title>
+  <link rel="stylesheet" href="/style.css">
+  <style>
+    .toolbar {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      margin-bottom: 0.75rem;
+    }
+
+    .btn-sm {
+      padding: 0.35rem 0.75rem;
+      font-size: 0.8rem;
+      font-weight: 600;
+      background: var(--surface);
+      color: var(--muted);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      cursor: pointer;
+    }
+
+    .btn-sm:hover {
+      background: #263554;
+      color: var(--text);
+    }
+
+    .chk-label {
+      font-size: 0.8rem;
+      color: var(--muted);
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      gap: 0.3rem;
+      margin-top: 0;
+      margin-bottom: 0;
+      -webkit-user-select: none;
+      user-select: none;
+    }
+
+    .chk-group {
+      margin-left: auto;
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+      white-space: nowrap;
+    }
+
+    input[type=checkbox] {
+      accent-color: var(--accent);
+    }
+
+    #log-box {
+      font-family: 'Courier New', monospace;
+      font-size: 0.76rem;
+      line-height: 1.6;
+      background: var(--input-bg);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 0.75rem 1rem;
+      height: 400px;
+      overflow-y: auto;
+      color: var(--text);
+    }
+
+    .ll {
+      white-space: pre-wrap;
+      overflow-wrap: anywhere;
+    }
+
+    .ts {
+      color: var(--muted);
+    }
+
+    .empty {
+      color: var(--muted);
+      font-style: italic;
+    }
+
+    #info {
+      font-size: 0.72rem;
+      color: var(--muted);
+      margin-top: 0.4rem;
+      text-align: right;
+    }
+  </style>
+</head>
+
+<body>
+  <h1 id="title">Logs</h1>
+  <p class="sub">Device log buffer (last 40 entries)</p>
+
+  <div class="card">
+    <div class="toolbar">
+      <button type="button" class="btn-sm" onclick="clearDisplay()">Clear</button>
+      <button type="button" class="btn-sm" id="copy-btn" onclick="copyLogs()">Copy</button>
+      <div class="chk-group">
+        <label class="chk-label"><input type="checkbox" id="live" checked> Live</label>
+        <label class="chk-label"><input type="checkbox" id="scroll" checked> Auto-scroll</label>
+      </div>
+    </div>
+    <div id="log-box"><span class="empty">Loading&#8230;</span></div>
+    <div id="info"></div>
+  </div>
+
+  <a class="back" href="/">&#8592; Back</a>
+
+  <script>
+    var allLines = [];
+    var hideAfterIdx = -1; // index into allLines after which entries are hidden by "Clear"
+    var prevVisibleCount = 0;
+
+    function esc(s) {
+      return s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+    }
+
+    function render() {
+      var visible = hideAfterIdx < 0 ? allLines : allLines.slice(hideAfterIdx + 1);
+      var box = document.getElementById('log-box');
+      var wasAtBottom = box.scrollHeight <= box.scrollTop + box.clientHeight + 4;
+      var isFirstRender = prevVisibleCount === 0;
+
+      if (visible.length === 0)
+      {
+        box.innerHTML = '<span class="empty">No entries to display.</span>';
+        document.getElementById('info').textContent = '';
+        prevVisibleCount = 0;
+        return;
+      }
+
+      box.innerHTML = visible.map(function (l) {
+        return '<div class="ll"><span class="ts">[' + esc(l.t) + ']</span> ' + esc(l.msg) + '</div>';
+      }).join('');
+
+      var total = allLines.length;
+      document.getElementById('info').textContent =
+        visible.length + (visible.length < total ? ' / ' + total : '') +
+        ' entr' + (total === 1 ? 'y' : 'ies');
+
+      if (document.getElementById('scroll').checked && (wasAtBottom || isFirstRender))
+      {
+        box.scrollTop = box.scrollHeight;
+      }
+      prevVisibleCount = visible.length;
+    }
+
+    async function fetchLogs() {
+      try
+      {
+        var r = await fetch('/api/logs');
+        if (!r.ok) return;
+        allLines = await r.json();
+        render();
+      } catch (e) { }
+    }
+
+    function clearDisplay() {
+      hideAfterIdx = allLines.length - 1;
+      prevVisibleCount = 0;
+      render();
+    }
+
+    function copyLogs() {
+      var visible = hideAfterIdx < 0 ? allLines : allLines.slice(hideAfterIdx + 1);
+      var btn = document.getElementById('copy-btn');
+      var prev = btn.textContent;
+      if (!visible.length)
+      {
+        btn.textContent = 'Nothing to copy';
+        setTimeout(function () { btn.textContent = prev; }, 1500);
+        return;
+      }
+      var text = visible.map(function (l) { return '[' + l.t + '] ' + l.msg; }).join('\n');
+      var ta = document.createElement('textarea');
+      ta.value = text;
+      ta.readOnly = true;
+      ta.style.position = 'fixed';
+      ta.style.left = '-9999px';
+      ta.style.top = '0';
+      document.body.appendChild(ta);
+      ta.focus({ preventScroll: true });
+      ta.setSelectionRange(0, ta.value.length);
+      var ok = false;
+      try { ok = document.execCommand('copy'); } catch (e) { }
+      document.body.removeChild(ta);
+      btn.textContent = ok ? 'Copied!' : 'Copy failed';
+      setTimeout(function () { btn.textContent = prev; }, 1500);
+    }
+
+    fetchLogs();
+    setInterval(function () {
+      if (document.getElementById('live').checked) fetchLogs();
+    }, 2000);
+
+    fetch('/api/deviceinfo').then(function (r) { return r.json(); }).then(function (d) {
+      document.getElementById('title').textContent = (d.name || 'Device') + ' \u2014 Logs';
+      document.title = (d.name || 'Device') + ' \u2014 Logs';
+    }).catch(function () { });
+  </script>
+</body>
+
+</html>

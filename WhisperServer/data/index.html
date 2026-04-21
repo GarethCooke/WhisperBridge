@@ -8,28 +8,10 @@
 <style>
   .row { display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.75rem; font-size: 0.9rem; }
   .row:last-child { margin-bottom: 0; }
-  .label { color: #888; }
+  .label { color: var(--muted); }
   .value { font-weight: 600; }
-  .ok   { color: #4caf50; }
-  .fail { color: #f44336; }
-  .idle { color: #888; }
-  button {
-    width: 100%; max-width: 360px; padding: 1rem;
-    background: #2979ff; color: #fff; border: none; border-radius: 12px;
-    font-size: 1rem; font-weight: 700; cursor: pointer; letter-spacing: 0.05em;
-    transition: background 0.15s;
-  }
-  button:not(:disabled):hover { background: #1565c0; }
+  button { width: 100%; max-width: 560px; }
   #msg { margin-top: 1rem; }
-  .btn-secondary {
-    background: transparent; color: #666; border: 1px solid #333;
-    padding: 0.5rem; font-size: 0.8rem; font-weight: 400;
-    margin-top: 0.5rem; letter-spacing: 0;
-  }
-  .btn-secondary:not(:disabled):hover { background: #1e1e1e; color: #ccc; }
-  a.btn-secondary {
-    display: block; text-align: center; text-decoration: none; border-radius: 12px;
-  }
 </style>
 </head>
 <body>
@@ -49,6 +31,7 @@
 <div id="msg"></div>
 <a href="setup.html" class="btn-secondary">Change network</a>
 <a href="settings.html" class="btn-secondary">Settings</a>
+<a href="log.html" class="btn-secondary">Logs</a>
 
 <script>
 function setMsg(txt, colour) {

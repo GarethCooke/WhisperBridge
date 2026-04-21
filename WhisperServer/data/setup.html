@@ -4,50 +4,28 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Device Setup</title>
+<link rel="stylesheet" href="/style.css">
 <style>
-  * { box-sizing: border-box; margin: 0; padding: 0; }
-  body { font-family: sans-serif; background: #111; color: #eee; display: flex; flex-direction: column; align-items: center; padding: 2rem 1rem; min-height: 100vh; }
-  h1 { font-size: 1.4rem; margin-bottom: 0.25rem; letter-spacing: 0.05em; }
-  .sub { font-size: 0.8rem; color: #888; margin-bottom: 2rem; }
-  .card { background: #1e1e1e; border-radius: 12px; padding: 1.5rem; width: 100%; max-width: 360px; margin-bottom: 1rem; }
-  button:disabled { background: #333; color: #555; cursor: not-allowed; }
-  #msg { font-size: 0.85rem; color: #888; min-height: 1.2em; text-align: center; }
-
-  .card-title { font-size: 0.75rem; color: #888; text-transform: uppercase; letter-spacing: 0.08em; margin-bottom: 0.75rem; }
+  .card-title { font-size: 0.75rem; color: var(--muted); text-transform: uppercase; letter-spacing: 0.08em; margin-bottom: 0.75rem; }
   .net-list { display: flex; flex-direction: column; gap: 0.4rem; min-height: 2rem; }
   .net-item {
     display: flex; align-items: center; justify-content: space-between;
-    padding: 0.6rem 0.75rem; background: #2a2a2a; border-radius: 8px;
+    padding: 0.6rem 0.75rem; background: var(--surface); border-radius: 8px;
     cursor: pointer; border: 1px solid transparent; transition: border-color 0.15s;
   }
-  .net-item:hover { border-color: #444; }
-  .net-item.selected { border-color: #2979ff; }
+  .net-item:hover { border-color: var(--border); }
+  .net-item.selected { border-color: var(--accent); }
   .net-name { font-size: 0.9rem; font-weight: 600; }
-  .net-meta { display: flex; align-items: center; gap: 0.4rem; font-size: 0.75rem; color: #888; }
-  .scanning { font-size: 0.85rem; color: #888; padding: 0.4rem 0; }
-
-  label { display: block; font-size: 0.8rem; color: #888; margin-bottom: 0.3rem; margin-top: 1rem; }
-  label:first-of-type { margin-top: 0; }
-  input {
-    width: 100%; padding: 0.75rem 1rem; background: #2a2a2a; border: 1px solid #333;
-    border-radius: 8px; color: #eee; font-size: 1rem; outline: none;
-  }
-  input:focus { border-color: #2979ff; }
-
+  .net-meta { display: flex; align-items: center; gap: 0.4rem; font-size: 0.75rem; color: var(--muted); }
+  .scanning { font-size: 0.85rem; color: var(--muted); padding: 0.4rem 0; }
   .btn-row { display: flex; gap: 0.5rem; margin-top: 1.5rem; }
-  button {
-    flex: 1; padding: 0.9rem; background: #2979ff; color: #fff; border: none;
-    border-radius: 10px; font-size: 1rem; font-weight: 700; cursor: pointer;
-    letter-spacing: 0.05em; transition: background 0.15s;
-  }
-  button.secondary { background: #2a2a2a; color: #aaa; flex: 0 0 auto; padding: 0.9rem 1rem; }
+  .btn-row button { flex: 1; padding: 0.9rem; width: auto; }
+  button.secondary { background: var(--surface); color: var(--muted); flex: 0 0 auto; padding: 0.9rem 1rem; }
+  button.secondary:not(:disabled):hover { background: #263554; color: var(--text); }
   button.rescan { flex: none; padding: 0.1rem 0.5rem; font-size: 0.75rem; border-radius: 6px; }
-  button:not(:disabled):not(.secondary):hover { background: #1565c0; }
-  button.secondary:not(:disabled):hover { background: #333; color: #eee; }
-
-  .url-card { background: #1e1e1e; border-radius: 12px; padding: 1rem 1.5rem; width: 100%; max-width: 360px; margin-bottom: 1rem; }
-  .url-label { font-size: 0.75rem; color: #888; margin-bottom: 0.25rem; }
-  .url-link { font-size: 0.9rem; color: #2979ff; word-break: break-all; }
+  .url-card { background: var(--card-bg); border-radius: var(--radius); padding: 1rem 1.5rem; width: 100%; max-width: 360px; margin-bottom: 1rem; }
+  .url-label { font-size: 0.75rem; color: var(--muted); margin-bottom: 0.25rem; }
+  .url-link { font-size: 0.9rem; color: var(--accent); word-break: break-all; }
 </style>
 </head>
 <body>
@@ -170,7 +148,7 @@ function save() {
   var btn = document.getElementById('btn');
   var msg = document.getElementById('msg');
   btn.disabled = true;
-  msg.style.color = '#888';
+  msg.style.color = '#7a8aaa';
   msg.textContent = 'Saving\u2026';
   fetch('/api/networkset', {
     method: 'POST',

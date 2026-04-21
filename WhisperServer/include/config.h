@@ -6,7 +6,7 @@
 
 // ── MQTT ─────────────────────────────────────────────────────────────────────
 // Edit broker IP before flashing. User/password are set at runtime via /settings.html.
-#define MQTT_HOST     "192.168.1.x"   // TODO: set broker IP
+#define MQTT_HOST     "192.168.x.x"   // TODO: set broker IP
 constexpr uint16_t MQTT_PORT = 1883;
 
 // Payloads
@@ -14,7 +14,7 @@ constexpr uint16_t MQTT_PORT = 1883;
 #define MQTT_PAYLOAD_OFF "OFF"
 
 // ── BLE – Vent-Axia Svara ────────────────────────────────────────────────────
-#define FAN_MAC_ADDRESS "58:2B:DB:34:D3:AE"
+#define FAN_MAC_ADDRESS "xx:xx:xx:xx:xx:xx"
 
 // Service containing the PIN/auth characteristic
 #define BLE_AUTH_SERVICE_UUID "e6834e4b-7b3a-48e6-91e4-f1d005f564d3"

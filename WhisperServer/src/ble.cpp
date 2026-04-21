@@ -1,5 +1,6 @@
 #include "ble.h"
 #include "config.h"
+#include <EspProvision.h>
 #include <NimBLEDevice.h>
 
 BleBoost Ble;
@@ -36,9 +37,11 @@ bool BleBoost::writeChar(NimBLERemoteCharacteristic* ch,
 
 bool BleBoost::runSequence() {
     NimBLEClient* client = NimBLEDevice::createClient();
+    client->setConnectTimeout(10);  // 10 s per attempt
+    String fanMac = Provision.getFanMac(FAN_MAC_ADDRESS);
 
     Serial.println("[BLE] Connecting...");
-    if (!client->connect(NimBLEAddress(FAN_MAC_ADDRESS))) {
+    if (!client->connect(NimBLEAddress(fanMac.c_str()))) {
         Serial.println("[BLE] Connection failed");
         NimBLEDevice::deleteClient(client);
         return false;
@@ -69,13 +72,15 @@ void BleBoost::runTask() {
         ulTaskNotifyTake(pdTRUE, portMAX_DELAY);
         _running = true;
         _lastSuccess = false;
-        for (int attempt = 1; attempt <= 3 && !_lastSuccess; attempt++) {
+        for (int attempt = 1; attempt <= 5 && !_lastSuccess; attempt++) {
             if (attempt > 1) {
-                Serial.printf("[BLE] Retry %d/3...\n", attempt);
-                vTaskDelay(pdMS_TO_TICKS(1000));
+                Serial.printf("[BLE] Retry %d/5...\n", attempt);
+                vTaskDelay(pdMS_TO_TICKS(2000));
             }
             _lastSuccess = runSequence();
         }
+        // Let WiFi re-sync after the BLE RF activity before returning to idle
+        vTaskDelay(pdMS_TO_TICKS(1500));
         _running = false;
         Serial.printf("[BLE] Sequence %s\n", _lastSuccess ? "succeeded" : "FAILED");
     }
@@ -88,6 +93,9 @@ void BleBoost::taskEntry(void* param) {
 void BleBoost::setup() {
     NimBLEDevice::init("");
     NimBLEDevice::setPower(ESP_PWR_LVL_P9);  // max TX power — fan may be across the room or through a wall
+    // Reduce scan duty cycle so WiFi gets adequate RF time during connection attempts
+    NimBLEDevice::getScan()->setInterval(160);  // 100 ms
+    NimBLEDevice::getScan()->setWindow(80);     // 50 ms (50% duty cycle)
     xTaskCreate(taskEntry, "ble_boost", 8192, this, 5,
                 reinterpret_cast<TaskHandle_t*>(&_task));
     Serial.println("[BLE] Ready");

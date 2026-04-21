@@ -9,6 +9,7 @@
 #include "config.h"
 #include "ble.h"
 #include "mqtt.h"
+#include <EspLogger.h>
 
 void setup() {
     Serial.begin(115200);
@@ -22,6 +23,7 @@ void setup() {
     pinMode(RESET_BUTTON_PIN, INPUT_PULLUP);
 #endif
 
+    LOG("WhisperBridge starting");
     Ble.setup();
 
     Provision.onStation([](AsyncWebServer& srv) {
@@ -42,8 +44,13 @@ void setup() {
                 req->send(409, "application/json", "{\"error\":\"already running\"}");
                 return;
             }
+            LOG("Boost triggered via API");
             Ble.trigger();
             req->send(200, "application/json", "{\"ok\":true}");
+        });
+
+        srv.on("/api/logs", HTTP_GET, [](AsyncWebServerRequest* req) {
+            req->send(200, "application/json", Logger::toJson());
         });
 
         srv.on("/api/deviceinfo", HTTP_GET, [](AsyncWebServerRequest* req) {
@@ -77,7 +84,10 @@ void setup() {
 
         srv.serveStatic("/", LittleFS, "/").setDefaultFile("index.html");
 
-        Mqtt.setCommandCallback([]() { Ble.trigger(); });
+        Mqtt.setCommandCallback([]() {
+            LOG("Boost triggered via MQTT");
+            Ble.trigger();
+        });
         String mqttUser = Provision.getMqttUser();
         String mqttPass = Provision.getMqttPass();
         Mqtt.setup(EspDevice::id().c_str(), mqttUser.c_str(), mqttPass.c_str());
@@ -102,6 +112,7 @@ void loop() {
     static bool s_wasRunning = false;
     const bool  running      = Ble.isRunning();
     if (s_wasRunning && !running) {
+        LOGF("BLE boost complete: %s", Ble.lastSuccess() ? "OK" : "FAILED");
         Mqtt.publishState(false);
     }
     s_wasRunning = running;
@@ -115,7 +126,7 @@ void loop() {
     if (digitalRead(RESET_BUTTON_PIN) == LOW) {
         if (s_btnPressedAt == 0) s_btnPressedAt = millis();
         else if (millis() - s_btnPressedAt >= 5000) {
-            Serial.println("[Reset] Button held 5 s — clearing credentials");
+            LOG("Reset button held 5s — clearing credentials");
             Provision.factoryReset();
             s_btnPressedAt = 0;
         }
