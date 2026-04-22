@@ -437,6 +437,10 @@ footer .material-icons { font-size: 16px; }
     <div class="nav-pill"><span class="material-icons">developer_board</span></div>
     Pins
   </a>
+  <a class="nav-item" href="#setup">
+    <div class="nav-pill"><span class="material-icons">rocket_launch</span></div>
+    Setup
+  </a>
   <a class="nav-item" href="#firmware">
     <div class="nav-pill"><span class="material-icons">code</span></div>
     FW
@@ -848,6 +852,150 @@ footer .material-icons { font-size: 16px; }
             </tr>
           </tbody>
         </table>
+      </div>
+    </section>
+
+    <!-- ── Setup Guide ──────────────────────────────────────────────── -->
+    <section class="section" id="setup">
+      <div class="section-header">
+        <div class="section-icon green">
+          <span class="material-icons">rocket_launch</span>
+        </div>
+        <h2>Setup Guide</h2>
+      </div>
+
+      <p>This guide walks through everything needed to get WhisperBridge running from scratch — hardware assembly, firmware configuration, first flash, WiFi provisioning, and Home Assistant integration.</p>
+
+      <h3>Prerequisites</h3>
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th>Item</th><th>Details</th></tr></thead>
+          <tbody>
+            <tr><td>ESP32 DevKit V1</td><td>Any standard 38-pin ESP32-WROOM-32 development board</td></tr>
+            <tr><td>USB cable</td><td>Micro-USB data cable (not charge-only) for initial flash</td></tr>
+            <tr><td>Vent-Axia Svara fan</td><td>Powered on and within BLE range (~10 m) of the ESP32</td></tr>
+            <tr><td>MQTT broker</td><td>Mosquitto or similar; must be reachable on the local network</td></tr>
+            <tr><td>PlatformIO</td><td>VS Code extension or CLI. Install from <a href="https://platformio.org" target="_blank">platformio.org</a></td></tr>
+            <tr><td>Node.js ≥ 18</td><td>Only needed for the mock dev server (<code>WhisperClient/test-server</code>)</td></tr>
+          </tbody>
+        </table>
+      </div>
+
+      <h3>Step-by-step</h3>
+      <div class="steps">
+
+        <div class="step">
+          <div class="step-num">1</div>
+          <div class="step-body">
+            <h3>Find your fan's BLE MAC address</h3>
+            <p>Power the fan on. Use a BLE scanner app (e.g. <strong>nRF Connect</strong> on Android/iOS) to scan for nearby devices. The Svara typically advertises as <strong>Svara</strong> or an unnamed device. Note the 6-byte MAC address (e.g. <code>A1:B2:C3:D4:E5:F6</code>).</p>
+          </div>
+        </div>
+
+        <div class="step">
+          <div class="step-num">2</div>
+          <div class="step-body">
+            <h3>Edit config.h</h3>
+            <p>Open <code>WhisperServer/include/config.h</code> and set these three values before building:</p>
+            <div class="code-block">
+              <div class="code-header"><span>cpp</span><span class="material-icons">content_copy</span></div>
+              <pre><code>#define MQTT_HOST       "192.168.1.x"        // your broker's IP
+#define FAN_MAC_ADDRESS "A1:B2:C3:D4:E5:F6"  // fan MAC from step 1
+#define OTA_PASSWORD    "your-ota-password"   // used for OTA flashing</code></pre>
+            </div>
+            <p style="margin-top:0.5rem">MQTT username and password are set at runtime via the web UI — they do not need to be in <code>config.h</code>.</p>
+          </div>
+        </div>
+
+        <div class="step">
+          <div class="step-num">3</div>
+          <div class="step-body">
+            <h3>Build and flash the firmware (USB)</h3>
+            <p>Connect the ESP32 via USB. Run both commands — firmware and filesystem are separate uploads.</p>
+            <div class="code-block">
+              <div class="code-header"><span>powershell — flash firmware</span><span class="material-icons">content_copy</span></div>
+              <pre><code>& "$env:USERPROFILE\.platformio\penv\Scripts\pio.exe" run -e esp32dev -t upload -d WhisperServer</code></pre>
+            </div>
+            <div class="code-block" style="margin-top:0.5rem">
+              <div class="code-header"><span>powershell — upload web UI (LittleFS)</span><span class="material-icons">content_copy</span></div>
+              <pre><code>& "$env:USERPROFILE\.platformio\penv\Scripts\pio.exe" run -e esp32dev -t uploadfs -d WhisperServer</code></pre>
+            </div>
+          </div>
+        </div>
+
+        <div class="step">
+          <div class="step-num">4</div>
+          <div class="step-body">
+            <h3>Provision WiFi via captive portal</h3>
+            <p>On first boot with no stored credentials the device starts a soft-AP:</p>
+            <ul style="margin: 0.5rem 0 0.5rem 1.25rem; line-height: 2">
+              <li>SSID: <code>WhisperBridge-Setup</code></li>
+              <li>Password: <code>whisperbridge</code></li>
+              <li>Portal: <code>http://10.0.0.1</code> (any HTTP request redirects here)</li>
+            </ul>
+            <p>Connect a phone or laptop to that AP, open a browser, and you will be redirected to <code>setup.html</code>. Select your home network, enter the password, and tap <strong>Save &amp; Connect</strong>. The device restarts into station mode.</p>
+          </div>
+        </div>
+
+        <div class="step">
+          <div class="step-num">5</div>
+          <div class="step-body">
+            <h3>Configure MQTT credentials (first station boot)</h3>
+            <p>Once the device has joined your network, navigate to <code>http://whisperbridge.local/settings.html</code> (or use the IP shown in the serial monitor). Enter your MQTT broker username and password, then click <strong>Save</strong>. The device stores these in NVS and reconnects to the broker immediately.</p>
+          </div>
+        </div>
+
+        <div class="step">
+          <div class="step-num">6</div>
+          <div class="step-body">
+            <h3>Verify Home Assistant auto-discovery</h3>
+            <p>Within a few seconds of connecting to the broker, WhisperBridge publishes an MQTT discovery payload to:</p>
+            <div class="code-block">
+              <div class="code-header"><span>topic</span><span class="material-icons">content_copy</span></div>
+              <pre><code>homeassistant/switch/whisperbridge_&lt;id&gt;_boost/config</code></pre>
+            </div>
+            <p style="margin-top:0.5rem">In Home Assistant go to <strong>Settings → Devices &amp; Services → MQTT</strong>. A new device named <strong>WhisperBridge</strong> with a <em>Boost</em> switch entity should appear automatically. No manual YAML required.</p>
+          </div>
+        </div>
+
+        <div class="step">
+          <div class="step-num">7</div>
+          <div class="step-body">
+            <h3>Test the boost command</h3>
+            <p>Either toggle the switch in Home Assistant, press the <strong>Boost</strong> button on the device web UI at <code>http://whisperbridge.local</code>, or publish directly:</p>
+            <div class="code-block">
+              <div class="code-header"><span>bash</span><span class="material-icons">content_copy</span></div>
+              <pre><code>mosquitto_pub -h 192.168.1.x -t "whisperbridge/&lt;id&gt;/boost" -m "ON"</code></pre>
+            </div>
+            <p style="margin-top:0.5rem">The status LED (GPIO 2) lights while the BLE sequence is in progress. The web UI status card updates every 2 s and shows <strong>Last result: success</strong> when the fan responds.</p>
+          </div>
+        </div>
+
+        <div class="step">
+          <div class="step-num">8</div>
+          <div class="step-body">
+            <h3>Future OTA updates</h3>
+            <p>After initial USB flash, subsequent firmware updates can be pushed wirelessly. The device must be reachable as <code>whisperbridge.local</code>. On Windows, allow inbound connections for <code>python.exe</code> in the PlatformIO venv through Windows Firewall.</p>
+            <div class="code-block">
+              <div class="code-header"><span>powershell</span><span class="material-icons">content_copy</span></div>
+              <pre><code>& "$env:USERPROFILE\.platformio\penv\Scripts\pio.exe" run -e esp32dev_ota -t upload -d WhisperServer</code></pre>
+            </div>
+          </div>
+        </div>
+
+        <div class="step">
+          <div class="step-num">9</div>
+          <div class="step-body">
+            <h3>Factory reset</h3>
+            <p>To clear stored WiFi credentials and return to AP/provisioning mode: hold the <strong>BOOT button</strong> (GPIO 0) for 5 seconds. The device clears NVS and restarts into <code>WhisperBridge-Setup</code> AP mode. Requires <code>#define RESET_BUTTON_PIN 0</code> to be enabled in <code>config.h</code>.</p>
+          </div>
+        </div>
+
+      </div>
+
+      <div class="alert info">
+        <span class="material-icons">info</span>
+        <div class="alert-body"><strong>Tip:</strong> Keep a serial monitor open during first boot (<code>pio device monitor -d WhisperServer</code>) to see the assigned IP address, MQTT connection status, and any BLE errors in real time.</div>
       </div>
     </section>
 
