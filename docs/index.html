@@ -287,6 +287,9 @@ p code, li code {
 }
 .step-body h3 { margin-top: 0.5rem; }
 .step-body p  { margin-bottom: 0.5rem; }
+.step-body .code-block + .code-block { margin-top: 0.5rem; }
+.step-body .code-block + p { margin-top: 0.5rem; }
+.step-body ul { margin: 0.5rem 0 0.5rem 1.25rem; line-height: 2; }
 
 /* ── BLE / protocol sequence steps ──────────────────────────────── */
 .ble-steps { display: flex; flex-direction: column; gap: 0.5rem; margin: 1rem 0; }
@@ -888,22 +891,15 @@ footer .material-icons { font-size: 16px; }
           <div class="step-num">1</div>
           <div class="step-body">
             <h3>Find your fan's BLE MAC address</h3>
-            <p>Power the fan on. Use a BLE scanner app (e.g. <strong>nRF Connect</strong> on Android/iOS) to scan for nearby devices. The Svara typically advertises as <strong>Svara</strong> or an unnamed device. Note the 6-byte MAC address (e.g. <code>A1:B2:C3:D4:E5:F6</code>).</p>
+            <p>Detach the fan unit from its base — the MAC address and PIN are printed on a label on the inside of the device. Note the 6-byte MAC address (e.g. <code>A1:B2:C3:D4:E5:F6</code>).</p>
           </div>
         </div>
 
         <div class="step">
           <div class="step-num">2</div>
           <div class="step-body">
-            <h3>Edit config.h</h3>
-            <p>Open <code>WhisperServer/include/config.h</code> and set these three values before building:</p>
-            <div class="code-block">
-              <div class="code-header"><span>cpp</span><span class="material-icons">content_copy</span></div>
-              <pre><code>#define MQTT_HOST       "192.168.1.x"        // your broker's IP
-#define FAN_MAC_ADDRESS "A1:B2:C3:D4:E5:F6"  // fan MAC from step 1
-#define OTA_PASSWORD    "your-ota-password"   // used for OTA flashing</code></pre>
-            </div>
-            <p style="margin-top:0.5rem">MQTT username and password are set at runtime via the web UI — they do not need to be in <code>config.h</code>.</p>
+            <h3>No pre-flash configuration needed</h3>
+            <p>All runtime settings — MQTT broker host/port/credentials, fan MAC address, and OTA password — are configured via the device web UI after flashing. <code>config.h</code> only contains compile-time defaults and optional hardware pin assignments; you do not need to edit it for a standard setup.</p>
           </div>
         </div>
 
@@ -916,7 +912,7 @@ footer .material-icons { font-size: 16px; }
               <div class="code-header"><span>powershell — flash firmware</span><span class="material-icons">content_copy</span></div>
               <pre><code>& "$env:USERPROFILE\.platformio\penv\Scripts\pio.exe" run -e esp32dev -t upload -d WhisperServer</code></pre>
             </div>
-            <div class="code-block" style="margin-top:0.5rem">
+            <div class="code-block">
               <div class="code-header"><span>powershell — upload web UI (LittleFS)</span><span class="material-icons">content_copy</span></div>
               <pre><code>& "$env:USERPROFILE\.platformio\penv\Scripts\pio.exe" run -e esp32dev -t uploadfs -d WhisperServer</code></pre>
             </div>
@@ -928,7 +924,7 @@ footer .material-icons { font-size: 16px; }
           <div class="step-body">
             <h3>Provision WiFi via captive portal</h3>
             <p>On first boot with no stored credentials the device starts a soft-AP:</p>
-            <ul style="margin: 0.5rem 0 0.5rem 1.25rem; line-height: 2">
+            <ul>
               <li>SSID: <code>WhisperBridge-Setup</code></li>
               <li>Password: <code>whisperbridge</code></li>
               <li>Portal: <code>http://10.0.0.1</code> (any HTTP request redirects here)</li>
@@ -954,7 +950,7 @@ footer .material-icons { font-size: 16px; }
               <div class="code-header"><span>topic</span><span class="material-icons">content_copy</span></div>
               <pre><code>homeassistant/switch/whisperbridge_&lt;id&gt;_boost/config</code></pre>
             </div>
-            <p style="margin-top:0.5rem">In Home Assistant go to <strong>Settings → Devices &amp; Services → MQTT</strong>. A new device named <strong>WhisperBridge</strong> with a <em>Boost</em> switch entity should appear automatically. No manual YAML required.</p>
+            <p>In Home Assistant go to <strong>Settings → Devices &amp; Services → MQTT</strong>. A new device named <strong>WhisperBridge</strong> with a <em>Boost</em> switch entity should appear automatically. No manual YAML required.</p>
           </div>
         </div>
 
@@ -967,7 +963,7 @@ footer .material-icons { font-size: 16px; }
               <div class="code-header"><span>bash</span><span class="material-icons">content_copy</span></div>
               <pre><code>mosquitto_pub -h 192.168.1.x -t "whisperbridge/&lt;id&gt;/boost" -m "ON"</code></pre>
             </div>
-            <p style="margin-top:0.5rem">The status LED (GPIO 2) lights while the BLE sequence is in progress. The web UI status card updates every 2 s and shows <strong>Last result: success</strong> when the fan responds.</p>
+            <p>The status LED (GPIO 2) lights while the BLE sequence is in progress. The web UI status card updates every 2 s and shows <strong>Last result: success</strong> when the fan responds.</p>
           </div>
         </div>
 
@@ -1359,7 +1355,7 @@ footer .material-icons { font-size: 16px; }
 
 
 <div class="lightbox-overlay" id="lightbox">
-  <button class="lightbox-close" id="lightboxClose">&times;</button>
+  <button type="button" class="lightbox-close" id="lightboxClose">&times;</button>
   <img id="lightboxImg" src="" alt="">
 </div>
 <script>
