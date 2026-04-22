@@ -3,6 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
+<link rel="icon" href="data:,">
 <title>WhisperBridge</title>
 <link rel="stylesheet" href="/style.css">
 <style>
@@ -10,11 +11,19 @@
   .row:last-child { margin-bottom: 0; }
   .label { color: var(--muted); }
   .value { font-weight: 600; }
-  button { width: 100%; max-width: 560px; }
+  #btn { width: 100%; max-width: 560px; }
   #msg { margin-top: 1rem; }
+  @keyframes spin { to { transform: rotate(360deg); } }
+  .fan-spin { display: inline-block; animation: spin 1.8s linear infinite; margin-right: 0.35em; }
+  .hidden { display: none; }
 </style>
+<script>if(localStorage.getItem('theme')==='light')document.documentElement.classList.add('light');</script>
 </head>
 <body>
+<button type="button" class="theme-toggle" id="theme-toggle" onclick="toggleTheme()" aria-label="Toggle theme">
+  <svg id="theme-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"></svg>
+</button>
+
 <h1>WhisperBridge</h1>
 <p class="sub">Vent-Axia Svara controller</p>
 
@@ -23,6 +32,7 @@
   <div class="row"><span class="label">IP</span><span class="value" id="ip">—</span></div>
   <div class="row"><span class="label">RSSI</span><span class="value" id="rssi">—</span></div>
   <div class="row"><span class="label">Status</span><span class="value" id="status">—</span></div>
+  <div class="row"><span class="label">Fan</span><span class="value" id="fan_status"><span id="fan_icon" class="fan-spin hidden">✦</span><span id="fan_text">—</span></span></div>
   <div class="row"><span class="label">Last BLE</span><span class="value" id="ble_ok">—</span></div>
   <div class="row"><span class="label">Built</span><span class="value idle" id="built">—</span></div>
 </div>
@@ -32,12 +42,27 @@
 <a href="setup.html" class="btn-secondary">Change network</a>
 <a href="settings.html" class="btn-secondary">Settings</a>
 <a href="log.html" class="btn-secondary">Logs</a>
+<a href="devices.html" class="btn-secondary">Devices</a>
 
 <script>
+var SUN = '<circle cx="12" cy="12" r="5"/><path d="M12 1v2M12 21v2M4.22 4.22l1.42 1.42M18.36 18.36l1.42 1.42M1 12h2M21 12h2M4.22 19.78l1.42-1.42M18.36 5.64l1.42-1.42"/>';
+var MOON = '<path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/>';
+function toggleTheme() {
+  var light = document.documentElement.classList.toggle('light');
+  localStorage.setItem('theme', light ? 'light' : 'dark');
+  document.getElementById('theme-icon').innerHTML = light ? MOON : SUN;
+}
+document.getElementById('theme-icon').innerHTML = document.documentElement.classList.contains('light') ? MOON : SUN;
+
 function setMsg(txt, colour) {
-  const el = document.getElementById('msg');
+  var el = document.getElementById('msg');
   el.textContent = txt;
-  el.style.color = colour || '#888';
+  el.style.color = colour || 'var(--muted)';
+}
+
+function formatCountdown(seconds) {
+  if (seconds < 60) return '<1 minute';
+  return Math.floor(seconds / 60) + 'm';
 }
 
 function updateStatus(data) {
@@ -45,7 +70,7 @@ function updateStatus(data) {
   document.getElementById('ip').textContent   = data.ip   || '—';
   document.getElementById('rssi').textContent = data.rssi != null ? data.rssi + ' dBm' : '—';
 
-  const statusEl = document.getElementById('status');
+  var statusEl = document.getElementById('status');
   if (data.running) {
     statusEl.textContent = 'Running';
     statusEl.className = 'value';
@@ -56,14 +81,27 @@ function updateStatus(data) {
     document.getElementById('btn').disabled = false;
   }
 
-  const bleEl = document.getElementById('ble_ok');
+  var fanEl   = document.getElementById('fan_status');
+  var fanIcon = document.getElementById('fan_icon');
+  var fanText = document.getElementById('fan_text');
+  if (data.boost_on) {
+    fanIcon.classList.remove('hidden');
+    fanText.textContent = 'Boosted · ' + data.fan_rpm + ' RPM · ' + formatCountdown(data.boost_seconds);
+    fanEl.className = 'value ok';
+  } else {
+    fanIcon.classList.add('hidden');
+    fanText.textContent = 'No Boost';
+    fanEl.className = 'value idle';
+  }
+
+  var bleEl = document.getElementById('ble_ok');
   bleEl.textContent = data.running ? '…' : (data.ble_ok ? 'OK' : 'Failed');
   bleEl.className = 'value ' + (data.running ? '' : (data.ble_ok ? 'ok' : 'fail'));
 }
 
 async function poll() {
   try {
-    const res = await fetch('/api/status');
+    var res = await fetch('/api/status');
     if (res.ok) updateStatus(await res.json());
   } catch (_) {}
 }
@@ -72,39 +110,25 @@ async function triggerBoost() {
   document.getElementById('btn').disabled = true;
   setMsg('Sending boost command…');
   try {
-    const res = await fetch('/api/boost', { method: 'POST' });
+    var res = await fetch('/api/boost', { method: 'POST' });
     if (res.ok) {
-      setMsg('Boost triggered — connecting to fan…', '#4caf50');
+      setMsg('Boost triggered — connecting to fan…', 'var(--ok)');
     } else {
-      const j = await res.json().catch(() => ({}));
-      setMsg('Error: ' + (j.error || res.status), '#f44336');
+      var j = await res.json().catch(function() { return {}; });
+      setMsg('Error: ' + (j.error || res.status), 'var(--err)');
       document.getElementById('btn').disabled = false;
     }
   } catch (e) {
-    setMsg('Request failed: ' + e.message, '#f44336');
+    setMsg('Request failed: ' + e.message, 'var(--err)');
     document.getElementById('btn').disabled = false;
-  }
-}
-
-async function reprovision() {
-  if (!confirm('Clear WiFi credentials and restart into setup mode?')) return;
-  try {
-    const res = await fetch('/api/reprovision', { method: 'POST' });
-    if (res.ok) {
-      setMsg('Restarting into setup mode…');
-    } else {
-      setMsg('Error: ' + res.status, '#f44336');
-    }
-  } catch (e) {
-    setMsg('Request failed: ' + e.message, '#f44336');
   }
 }
 
 async function loadDeviceInfo() {
   try {
-    const res = await fetch('/api/deviceinfo');
+    var res = await fetch('/api/deviceinfo');
     if (res.ok) {
-      const d = await res.json();
+      var d = await res.json();
       if (d.built) document.getElementById('built').textContent = d.built;
     }
   } catch (_) {}

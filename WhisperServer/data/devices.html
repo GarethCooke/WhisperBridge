@@ -1,0 +1,74 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<link rel="icon" href="data:,">
+<title>WhisperBridge — Devices</title>
+<link rel="stylesheet" href="/style.css">
+<style>
+  .device-list { display: flex; flex-direction: column; gap: 0.4rem; }
+  .device-item {
+    display: flex; justify-content: space-between; align-items: center;
+    padding: 0.75rem 1rem; border-radius: 8px;
+    background: var(--card-bg); border: 1px solid var(--border);
+    text-decoration: none; color: var(--text); transition: border-color 0.2s;
+  }
+  .device-item:hover { border-color: var(--accent); }
+  .device-id  { font-size: 0.9rem; font-weight: 600; }
+  .device-ip  { font-size: 0.75rem; color: var(--muted); margin-top: 0.15rem; }
+  .device-arrow { color: var(--muted); font-size: 1.1rem; }
+  .this-badge { color: var(--ok); font-size: 0.7rem; font-weight: 400; margin-left: 0.4rem; }
+</style>
+<script>if(localStorage.getItem('theme')==='light')document.documentElement.classList.add('light');</script>
+</head>
+<body>
+<button type="button" class="theme-toggle" id="theme-toggle" onclick="toggleTheme()" aria-label="Toggle theme">
+  <svg id="theme-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"></svg>
+</button>
+
+<h1>WhisperBridge</h1>
+<p class="sub">Devices on this network</p>
+
+<div class="card">
+  <div id="list" class="device-list"><p>Scanning&hellip;</p></div>
+</div>
+
+<a href="/" class="back">&#8592; Back</a>
+
+<script>
+var SUN = '<circle cx="12" cy="12" r="5"/><path d="M12 1v2M12 21v2M4.22 4.22l1.42 1.42M18.36 18.36l1.42 1.42M1 12h2M21 12h2M4.22 19.78l1.42-1.42M18.36 5.64l1.42-1.42"/>';
+var MOON = '<path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/>';
+function toggleTheme() {
+  var light = document.documentElement.classList.toggle('light');
+  localStorage.setItem('theme', light ? 'light' : 'dark');
+  document.getElementById('theme-icon').innerHTML = light ? MOON : SUN;
+}
+document.getElementById('theme-icon').innerHTML = document.documentElement.classList.contains('light') ? MOON : SUN;
+
+fetch('/api/devices')
+  .then(function(r) { return r.json(); })
+  .then(function(data) {
+    var el = document.getElementById('list');
+    var devices = data.devices || [];
+    if (devices.length === 0) { el.innerHTML = '<p>No devices found</p>'; return; }
+    el.innerHTML = '';
+    devices.forEach(function(d, i) {
+      var a = document.createElement('a');
+      a.className = 'device-item';
+      a.href = d.url;
+      a.innerHTML =
+        '<div>'
+        + '<div class="device-id">' + d.id + (i === 0 ? '<span class="this-badge">(this device)</span>' : '') + '</div>'
+        + '<div class="device-ip">' + d.ip + '</div>'
+        + '</div>'
+        + '<span class="device-arrow">&#8250;</span>';
+      el.appendChild(a);
+    });
+  })
+  .catch(function() {
+    document.getElementById('list').innerHTML = '<p>Scan failed — try refreshing</p>';
+  });
+</script>
+</body>
+</html>

@@ -33,7 +33,8 @@ void MqttManager::setup(const char* deviceId, const char* mqttUser, const char* 
 
 void MqttManager::publishDiscovery() {
     JsonDocument doc;
-    String entityId = String("whisperbridge_") + EspDevice::id();
+    String entityId = EspDevice::id();
+    entityId.replace('-', '_');
 
     LOGF("[MQTT] Publishing Home Assistant discovery for %s", entityId.c_str());
 
@@ -47,13 +48,6 @@ void MqttManager::publishDiscovery() {
     doc["retain"] = false;
     doc["icon"] = "mdi:fan";
 
-    LOGF("[MQTT]   name: Boost");
-    LOGF("[MQTT]   unique_id: %s", (entityId + "_boost").c_str());
-    LOGF("[MQTT]   command_topic: %s", _topicCommand.c_str());
-    LOGF("[MQTT]   state_topic: %s", _topicState.c_str());
-    LOGF("[MQTT]   payload_on: %s", MQTT_PAYLOAD_ON);
-    LOGF("[MQTT]   payload_off: %s", MQTT_PAYLOAD_OFF);
-    LOGF("[MQTT]   icon: mdi:fan");
 
     JsonObject dev = doc["device"].to<JsonObject>();
     dev["name"] = "WhisperBridge";
@@ -63,7 +57,9 @@ void MqttManager::publishDiscovery() {
 
     LOGF("[MQTT]   device.name: WhisperBridge");
     LOGF("[MQTT]   device.model: WhisperBridge v1");
-    LOGF("[MQTT]   device.manufacturer: Custom");
+    LOGF("[MQTT]   unique_id: %s", (entityId + "_boost").c_str());
+    LOGF("[MQTT]   command_topic: %s", _topicCommand.c_str());
+    LOGF("[MQTT]   state_topic: %s", _topicState.c_str());
     LOGF("[MQTT]   device.identifiers[0]: %s", entityId.c_str());
 
     char buf[512];

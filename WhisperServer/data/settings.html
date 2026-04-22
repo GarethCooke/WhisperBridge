@@ -3,6 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
+<link rel="icon" href="data:,">
 <title>Device Settings</title>
 <link rel="stylesheet" href="/style.css">
 <style>
@@ -21,8 +22,13 @@
   .field-row > div { flex: 1; }
   .field-row > div.narrow { flex: 0 0 6rem; }
 </style>
+<script>if(localStorage.getItem('theme')==='light')document.documentElement.classList.add('light');</script>
 </head>
 <body>
+<button type="button" class="theme-toggle" id="theme-toggle" onclick="toggleTheme()" aria-label="Toggle theme">
+  <svg id="theme-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"></svg>
+</button>
+
 <h1 id="title">Settings</h1>
 <p class="sub">Device credentials</p>
 
@@ -77,6 +83,15 @@
 <a class="back" href="/">&#8592; Back</a>
 
 <script>
+var SUN = '<circle cx="12" cy="12" r="5"/><path d="M12 1v2M12 21v2M4.22 4.22l1.42 1.42M18.36 18.36l1.42 1.42M1 12h2M21 12h2M4.22 19.78l1.42-1.42M18.36 5.64l1.42-1.42"/>';
+var MOON = '<path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/>';
+function toggleTheme() {
+  var light = document.documentElement.classList.toggle('light');
+  localStorage.setItem('theme', light ? 'light' : 'dark');
+  document.getElementById('theme-icon').innerHTML = light ? MOON : SUN;
+}
+document.getElementById('theme-icon').innerHTML = document.documentElement.classList.contains('light') ? MOON : SUN;
+
 function toggleVis(id, btn) {
   var el = document.getElementById(id);
   el.type = el.type === 'password' ? 'text' : 'password';
@@ -84,7 +99,7 @@ function toggleVis(id, btn) {
 
 fetch('/api/deviceinfo').then(function(r) { return r.json(); }).then(function(info) {
   document.getElementById('title').textContent = info.name || 'Device';
-  document.title = (info.name || 'Device') + ' \u2014 Settings';
+  document.title = (info.name || 'Device') + ' — Settings';
 }).catch(function() {});
 
 fetch('/api/settings').then(function(r) { return r.json(); }).then(function(s) {
@@ -99,8 +114,8 @@ fetch('/api/settings').then(function(r) { return r.json(); }).then(function(s) {
 
 function post(body, msgId, successText) {
   var msg = document.getElementById(msgId);
-  msg.style.color = '#7a8aaa';
-  msg.textContent = 'Saving\u2026';
+  msg.style.color = 'var(--muted)';
+  msg.textContent = 'Saving…';
   fetch('/api/settings', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
@@ -109,15 +124,15 @@ function post(body, msgId, successText) {
     if (!r.ok) throw new Error('HTTP ' + r.status);
     return r.json();
   }).then(function(data) {
-    msg.style.color = '#4caf50';
+    msg.style.color = 'var(--ok)';
     if (data.restart) {
-      msg.textContent = 'Saved \u2014 restarting\u2026';
+      msg.textContent = 'Saved — restarting…';
       setTimeout(function() { location.reload(); }, 6000);
     } else {
       msg.textContent = successText;
     }
   }).catch(function(e) {
-    msg.style.color = '#f44336';
+    msg.style.color = 'var(--err)';
     msg.textContent = 'Error: ' + e.message;
   });
 }
@@ -132,7 +147,7 @@ function saveMqtt() {
     mqtt_pass: document.getElementById('mqtt-pass').value
   };
   if (portVal) body.mqtt_port = parseInt(portVal, 10);
-  post(body, 'mqtt-msg', 'Saved \u2014 restart device to apply.');
+  post(body, 'mqtt-msg', 'Saved — restart device to apply.');
   document.getElementById('mqtt-badge').hidden = document.getElementById('mqtt-pass').value.length === 0;
 }
 
@@ -140,7 +155,7 @@ function saveFan() {
   post(
     { fan_mac: document.getElementById('fan-mac').value },
     'fan-msg',
-    'Saved \u2014 takes effect on next boost.'
+    'Saved — takes effect on next boost.'
   );
 }
 
@@ -148,7 +163,7 @@ function saveOta() {
   post(
     { ota_pass: document.getElementById('ota-pass').value },
     'ota-msg',
-    'Saved \u2014 restart device to apply.'
+    'Saved — restart device to apply.'
   );
   document.getElementById('ota-badge').hidden = document.getElementById('ota-pass').value.length === 0;
 }

@@ -53,6 +53,10 @@ MQTT topics (where `<id>` = last 3 bytes of MAC):
 | `whisperbridge/<id>/boost/state` | Publish | `ON` while running, `OFF` when done |
 | `homeassistant/switch/whisperbridge_<id>_boost/config` | Publish (on connect) | HA MQTT auto-discovery payload |
 
+## System Setup
+
+For full system setup — Home Assistant, Mosquitto, Cloudflare Tunnel, and the Alexa/Lambda integration — see [SETUP.md](SETUP.md).
+
 ## Before Flashing
 
 Edit [`WhisperServer/include/config.h`](WhisperServer/include/config.h) and set:

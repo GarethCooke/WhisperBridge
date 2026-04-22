@@ -29,11 +29,14 @@ void setup() {
     Provision.onStation([](AsyncWebServer& srv) {
         srv.on("/api/status", HTTP_GET, [](AsyncWebServerRequest* req) {
             JsonDocument doc;
-            doc["running"] = Ble.isRunning();
-            doc["ble_ok"]  = Ble.lastSuccess();
-            doc["ssid"]    = WiFi.SSID();
-            doc["ip"]      = WiFi.localIP().toString();
-            doc["rssi"]    = WiFi.RSSI();
+            doc["running"]       = Ble.isRunning();
+            doc["ble_ok"]        = Ble.lastSuccess();
+            doc["boost_on"]      = Ble.boostOn();
+            doc["fan_rpm"]       = Ble.boostRpm();
+            doc["boost_seconds"] = Ble.boostSeconds();
+            doc["ssid"]          = WiFi.SSID();
+            doc["ip"]            = WiFi.localIP().toString();
+            doc["rssi"]          = WiFi.RSSI();
             String out;
             serializeJson(doc, out);
             req->send(200, "application/json", out);
@@ -98,7 +101,7 @@ void setup() {
     cfg.nvsNamespace     = "whisper";
     cfg.otaPassword      = OTA_PASSWORD;
     cfg.friendlyHostname = "whisperbridge";
-    cfg.serviceType      = nullptr;
+    cfg.serviceType      = "whisperbridge";
     Provision.begin("whisperbridge", "WhisperBridge", cfg);
 }
 
@@ -107,6 +110,7 @@ void loop() {
 
     if (Provision.isApMode()) return;
 
+    Mqtt.suspend(Ble.isActive());
     Mqtt.loop();
 
     static bool s_wasRunning = false;

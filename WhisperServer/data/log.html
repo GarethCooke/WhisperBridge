@@ -4,6 +4,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
+  <link rel="icon" href="data:,">
   <title>Logs</title>
   <link rel="stylesheet" href="/style.css">
   <style>
@@ -26,7 +27,7 @@
     }
 
     .btn-sm:hover {
-      background: #263554;
+      background: var(--surface-h);
       color: var(--text);
     }
 
@@ -89,9 +90,14 @@
       text-align: right;
     }
   </style>
+  <script>if(localStorage.getItem('theme')==='light')document.documentElement.classList.add('light');</script>
 </head>
 
 <body>
+  <button type="button" class="theme-toggle" id="theme-toggle" onclick="toggleTheme()" aria-label="Toggle theme">
+    <svg id="theme-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"></svg>
+  </button>
+
   <h1 id="title">Logs</h1>
   <p class="sub">Device log buffer (last 40 entries)</p>
 
@@ -111,8 +117,17 @@
   <a class="back" href="/">&#8592; Back</a>
 
   <script>
+    var SUN = '<circle cx="12" cy="12" r="5"/><path d="M12 1v2M12 21v2M4.22 4.22l1.42 1.42M18.36 18.36l1.42 1.42M1 12h2M21 12h2M4.22 19.78l1.42-1.42M18.36 5.64l1.42-1.42"/>';
+    var MOON = '<path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/>';
+    function toggleTheme() {
+      var light = document.documentElement.classList.toggle('light');
+      localStorage.setItem('theme', light ? 'light' : 'dark');
+      document.getElementById('theme-icon').innerHTML = light ? MOON : SUN;
+    }
+    document.getElementById('theme-icon').innerHTML = document.documentElement.classList.contains('light') ? MOON : SUN;
+
     var allLines = [];
-    var hideAfterIdx = -1; // index into allLines after which entries are hidden by "Clear"
+    var hideAfterIdx = -1;
     var prevVisibleCount = 0;
 
     function esc(s) {
@@ -125,15 +140,14 @@
       var wasAtBottom = box.scrollHeight <= box.scrollTop + box.clientHeight + 4;
       var isFirstRender = prevVisibleCount === 0;
 
-      if (visible.length === 0)
-      {
+      if (visible.length === 0) {
         box.innerHTML = '<span class="empty">No entries to display.</span>';
         document.getElementById('info').textContent = '';
         prevVisibleCount = 0;
         return;
       }
 
-      box.innerHTML = visible.map(function (l) {
+      box.innerHTML = visible.map(function(l) {
         return '<div class="ll"><span class="ts">[' + esc(l.t) + ']</span> ' + esc(l.msg) + '</div>';
       }).join('');
 
@@ -142,21 +156,19 @@
         visible.length + (visible.length < total ? ' / ' + total : '') +
         ' entr' + (total === 1 ? 'y' : 'ies');
 
-      if (document.getElementById('scroll').checked && (wasAtBottom || isFirstRender))
-      {
+      if (document.getElementById('scroll').checked && (wasAtBottom || isFirstRender)) {
         box.scrollTop = box.scrollHeight;
       }
       prevVisibleCount = visible.length;
     }
 
     async function fetchLogs() {
-      try
-      {
+      try {
         var r = await fetch('/api/logs');
         if (!r.ok) return;
         allLines = await r.json();
         render();
-      } catch (e) { }
+      } catch (e) {}
     }
 
     function clearDisplay() {
@@ -169,13 +181,12 @@
       var visible = hideAfterIdx < 0 ? allLines : allLines.slice(hideAfterIdx + 1);
       var btn = document.getElementById('copy-btn');
       var prev = btn.textContent;
-      if (!visible.length)
-      {
+      if (!visible.length) {
         btn.textContent = 'Nothing to copy';
-        setTimeout(function () { btn.textContent = prev; }, 1500);
+        setTimeout(function() { btn.textContent = prev; }, 1500);
         return;
       }
-      var text = visible.map(function (l) { return '[' + l.t + '] ' + l.msg; }).join('\n');
+      var text = visible.map(function(l) { return '[' + l.t + '] ' + l.msg; }).join('\n');
       var ta = document.createElement('textarea');
       ta.value = text;
       ta.readOnly = true;
@@ -186,21 +197,21 @@
       ta.focus({ preventScroll: true });
       ta.setSelectionRange(0, ta.value.length);
       var ok = false;
-      try { ok = document.execCommand('copy'); } catch (e) { }
+      try { ok = document.execCommand('copy'); } catch (e) {}
       document.body.removeChild(ta);
       btn.textContent = ok ? 'Copied!' : 'Copy failed';
-      setTimeout(function () { btn.textContent = prev; }, 1500);
+      setTimeout(function() { btn.textContent = prev; }, 1500);
     }
 
     fetchLogs();
-    setInterval(function () {
+    setInterval(function() {
       if (document.getElementById('live').checked) fetchLogs();
     }, 2000);
 
-    fetch('/api/deviceinfo').then(function (r) { return r.json(); }).then(function (d) {
-      document.getElementById('title').textContent = (d.name || 'Device') + ' \u2014 Logs';
-      document.title = (d.name || 'Device') + ' \u2014 Logs';
-    }).catch(function () { });
+    fetch('/api/deviceinfo').then(function(r) { return r.json(); }).then(function(d) {
+      document.getElementById('title').textContent = (d.name || 'Device') + ' — Logs';
+      document.title = (d.name || 'Device') + ' — Logs';
+    }).catch(function() {});
   </script>
 </body>
 

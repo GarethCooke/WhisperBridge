@@ -1,18 +1,35 @@
 *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
 :root {
-    --bg:       #1a1a2e;
-    --card-bg:  #16213e;
-    --surface:  #1e2d4a;
-    --input-bg: #0d1526;
-    --text:     #eaeaea;
-    --muted:    #7a8aaa;
-    --accent:   #2979ff;
-    --ok:       #4caf50;
-    --err:      #f44336;
-    --border:   #2a3a5e;
-    --radius:   12px;
+    --bg:        #1a1a2e;
+    --card-bg:   #16213e;
+    --surface:   #1e2d4a;
+    --surface-h: #263554;
+    --input-bg:  #0d1526;
+    --text:      #eaeaea;
+    --muted:     #7a8aaa;
+    --accent:    #2979ff;
+    --accent-h:  #1565c0;
+    --ok:        #4caf50;
+    --err:       #f44336;
+    --border:    #2a3a5e;
+    --radius:    12px;
 }
+
+html.light {
+    --bg:        #f0f4ff;
+    --card-bg:   #ffffff;
+    --surface:   #dde6f7;
+    --surface-h: #c8d8f0;
+    --input-bg:  #f8faff;
+    --text:      #0d1526;
+    --muted:     #5a6888;
+    --accent:    #1565c0;
+    --accent-h:  #0d47a1;
+    --border:    rgba(0,0,0,0.12);
+}
+
+html { transition: background-color 0.3s ease, color 0.3s ease; }
 
 body {
     font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
@@ -44,7 +61,7 @@ button {
     font-size: 1rem; font-weight: 700; cursor: pointer;
     letter-spacing: 0.05em; transition: background 0.15s;
 }
-button:not(:disabled):hover { background: #1565c0; }
+button:not(:disabled):hover { background: var(--accent-h); }
 button:disabled { background: var(--surface); color: var(--muted); cursor: not-allowed; }
 
 label {
@@ -57,8 +74,17 @@ input {
     width: 100%; padding: 0.75rem 1rem;
     background: var(--input-bg); border: 1px solid var(--border);
     border-radius: 8px; color: var(--text); font-size: 1rem; outline: none;
+    transition: border-color 0.15s;
 }
 input:focus { border-color: var(--accent); }
+
+input:-webkit-autofill,
+input:-webkit-autofill:hover,
+input:-webkit-autofill:focus {
+    -webkit-box-shadow: 0 0 0px 1000px var(--input-bg) inset;
+    -webkit-text-fill-color: var(--text);
+    caret-color: var(--text);
+}
 
 .ok   { color: var(--ok); }
 .fail { color: var(--err); }
@@ -81,3 +107,20 @@ input:focus { border-color: var(--accent); }
 a.btn-secondary {
     display: block; text-align: center; text-decoration: none; border-radius: var(--radius);
 }
+
+/* Icon-only theme toggle — resets all inherited button styles */
+.theme-toggle {
+    position: fixed; top: 0.75rem; right: 0.75rem; z-index: 100;
+    background: transparent !important; border: none !important;
+    border-radius: 6px; padding: 0.35rem !important; cursor: pointer;
+    color: var(--muted); line-height: 0;
+    width: auto !important; max-width: none !important;
+    font-size: 0 !important; font-weight: normal !important; letter-spacing: 0 !important;
+    transition: color 0.2s;
+}
+.theme-toggle:hover { color: var(--text); background: transparent !important; }
+
+::-webkit-scrollbar { width: 8px; }
+::-webkit-scrollbar-track { background: var(--card-bg); }
+::-webkit-scrollbar-thumb { background: var(--surface); border-radius: 4px; }
+::-webkit-scrollbar-thumb:hover { background: var(--accent-h); }
