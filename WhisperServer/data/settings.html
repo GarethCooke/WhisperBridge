@@ -21,6 +21,8 @@
   .field-row { display: flex; gap: 0.75rem; }
   .field-row > div { flex: 1; }
   .field-row > div.narrow { flex: 0 0 6rem; }
+  .label-note { color: var(--muted); font-weight: 400; }
+  .input-mono { font-family: monospace; }
 </style>
 <script>if(localStorage.getItem('theme')==='light')document.documentElement.classList.add('light');</script>
 </head>
@@ -61,6 +63,8 @@
   <div class="card-title">Fan</div>
   <label for="fan-mac">Bluetooth MAC address</label>
   <input id="fan-mac" type="text" placeholder="AA:BB:CC:DD:EE:FF" autocomplete="off" autocorrect="off" spellcheck="false">
+  <label for="fan-pin">PIN <small class="label-note">(found on label inside device)</small></label>
+  <input id="fan-pin" type="text" class="input-mono" placeholder="e3146205" autocomplete="off" autocorrect="off" spellcheck="false">
   <div class="btn-row">
     <button type="button" onclick="saveFan()">Save Fan</button>
   </div>
@@ -108,6 +112,7 @@ fetch('/api/settings').then(function(r) { return r.json(); }).then(function(s) {
   document.getElementById('mqtt-user').value = s.mqtt_user || '';
   document.getElementById('mqtt-pass').value = s.mqtt_pass || '';
   document.getElementById('fan-mac').value   = s.fan_mac   || '';
+  document.getElementById('fan-pin').value   = s.fan_pin   || '';
   if (s.mqtt_pass) document.getElementById('mqtt-badge').hidden = false;
   if (s.ota_pass_set)  document.getElementById('ota-badge').hidden  = false;
 }).catch(function() {});
@@ -153,7 +158,10 @@ function saveMqtt() {
 
 function saveFan() {
   post(
-    { fan_mac: document.getElementById('fan-mac').value },
+    {
+      fan_mac: document.getElementById('fan-mac').value,
+      fan_pin: document.getElementById('fan-pin').value
+    },
     'fan-msg',
     'Saved — takes effect on next boost.'
   );

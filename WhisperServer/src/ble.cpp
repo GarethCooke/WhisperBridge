@@ -6,6 +6,16 @@
 
 BleBoost Ble;
 
+static std::vector<uint8_t> pinBytes() {
+    String hex = Provision.getFanPin(BLE_PIN_HEX);
+    std::vector<uint8_t> bytes;
+    for (size_t i = 0; i + 1 < (size_t)hex.length(); i += 2) {
+        char buf[3] = { hex[i], hex[i + 1], '\0' };
+        bytes.push_back((uint8_t)strtoul(buf, nullptr, 16));
+    }
+    return bytes;
+}
+
 // ── BleBoost ──────────────────────────────────────────────────────────────────
 
 void BleBoost::cleanup(NimBLEClient* client) {
@@ -62,7 +72,8 @@ bool BleBoost::pollBoostStatus() {
         BLE_AUTH_SERVICE_UUID, BLE_AUTH_CHAR_UUID,
         "Auth service", "Auth characteristic");
     if (!authChar) { cleanup(client); return false; }
-    if (!writeChar(authChar, BLE_PIN_BYTES, sizeof(BLE_PIN_BYTES), "PIN")) { cleanup(client); return false; }
+    auto pin = pinBytes();
+    if (!writeChar(authChar, pin.data(), pin.size(), "PIN")) { cleanup(client); return false; }
     vTaskDelay(pdMS_TO_TICKS(200));
 
     NimBLERemoteCharacteristic* cmdChar = getChar(client,
@@ -93,7 +104,8 @@ bool BleBoost::runSequence() {
         "Auth service", "Auth characteristic");
     if (!authChar) { cleanup(client); return false; }
 
-    if (!writeChar(authChar, BLE_PIN_BYTES, sizeof(BLE_PIN_BYTES), "PIN")) { cleanup(client); return false; }
+    auto pin = pinBytes();
+    if (!writeChar(authChar, pin.data(), pin.size(), "PIN")) { cleanup(client); return false; }
     vTaskDelay(pdMS_TO_TICKS(200));  // brief settle after auth
 
     NimBLERemoteCharacteristic* cmdChar = getChar(client,

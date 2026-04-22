@@ -891,7 +891,7 @@ footer .material-icons { font-size: 16px; }
           <div class="step-num">1</div>
           <div class="step-body">
             <h3>Find your fan's BLE MAC address</h3>
-            <p>Detach the fan unit from its base — the MAC address and PIN are printed on a label on the inside of the device. Note the 6-byte MAC address (e.g. <code>A1:B2:C3:D4:E5:F6</code>).</p>
+            <p>Detach the fan unit from its base — the MAC address and PIN are printed on a label on the inside of the device. Note both values: the 6-byte MAC address (e.g. <code>A1:B2:C3:D4:E5:F6</code>) and the 8-character hex PIN (e.g. <code>e3146205</code>).</p>
           </div>
         </div>
 
@@ -936,8 +936,14 @@ footer .material-icons { font-size: 16px; }
         <div class="step">
           <div class="step-num">5</div>
           <div class="step-body">
-            <h3>Configure MQTT credentials (first station boot)</h3>
-            <p>Once the device has joined your network, navigate to <code>http://whisperbridge.local/settings.html</code> (or use the IP shown in the serial monitor). Enter your MQTT broker username and password, then click <strong>Save</strong>. The device stores these in NVS and reconnects to the broker immediately.</p>
+            <h3>Configure device settings (first station boot)</h3>
+            <p>Once the device has joined your network, navigate to <code>http://whisperbridge.local/settings.html</code> (or use the IP shown in the serial monitor) and fill in all three cards:</p>
+            <ul>
+              <li><strong>MQTT</strong> — broker host, port, username, and password</li>
+              <li><strong>Fan</strong> — Bluetooth MAC address and PIN (both from the label found in step 1)</li>
+              <li><strong>OTA</strong> — a password for future wireless firmware updates</li>
+            </ul>
+            <p>All values are stored in NVS on the device. MQTT and OTA changes take effect after the device restarts; the fan MAC and PIN take effect immediately on the next boost.</p>
           </div>
         </div>
 

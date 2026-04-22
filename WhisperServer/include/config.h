@@ -19,8 +19,8 @@ constexpr uint16_t MQTT_PORT = 1883;
 // Service containing the PIN/auth characteristic
 #define BLE_AUTH_SERVICE_UUID "e6834e4b-7b3a-48e6-91e4-f1d005f564d3"
 #define BLE_AUTH_CHAR_UUID    "4cad343a-209a-40b7-b911-4d9b3df569b2"
-// PIN value: e3146205 as raw bytes
-constexpr uint8_t BLE_PIN_BYTES[] = { 0xe3, 0x14, 0x62, 0x05 };
+// PIN fallback — overridden at runtime via /settings.html (stored in NVS as hex string)
+#define BLE_PIN_HEX "e3146205"
 
 // Service containing the command characteristic
 #define BLE_CMD_SERVICE_UUID  "c119e858-0531-4681-9674-5a11f0e53bb4"
