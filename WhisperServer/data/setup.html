@@ -4,6 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Device Setup</title>
+<link rel="icon" href="data:,">
 <link rel="stylesheet" href="/style.css">
 <style>
   .card-title { font-size: 0.75rem; color: var(--muted); text-transform: uppercase; letter-spacing: 0.08em; margin-bottom: 0.75rem; }
@@ -53,11 +54,12 @@
   <label for="pass">Password</label>
   <input id="pass" type="password" placeholder="leave empty for open networks" autocomplete="off">
   <div class="btn-row">
-    <button type="button" class="secondary" onclick="location.href='/'">&#8592; Back</button>
     <button type="button" id="btn" disabled onclick="save()">Connect</button>
   </div>
 </div>
 <div id="msg"></div>
+
+<a class="back" href="/">&#8592; Back</a>
 
 <script>
 var SUN = '<circle cx="12" cy="12" r="5"/><path d="M12 1v2M12 21v2M4.22 4.22l1.42 1.42M18.36 18.36l1.42 1.42M1 12h2M21 12h2M4.22 19.78l1.42-1.42M18.36 5.64l1.42-1.42"/>';
